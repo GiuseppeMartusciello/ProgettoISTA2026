@@ -1,0 +1,72 @@
+.toast-dark .Toastify__toast {
+  background-color: #2c2e33; /* dark-6 */
+  color: #f8f9fa; /* dark-0 */
+  border: 1px solid #373a40; /* dark-4 */
+}
+
+.toast-dark .Toastify__toast--success {
+  background-color: #0b5529; /* green-9 */
+  color: #e6fcf5; /* green-0 */
+}
+
+.toast-dark .Toastify__toast--error {
+  background-color: #c92a2a; /* red-9 */
+  color: #fff5f5; /* red-0 */
+}
+
+.toast-dark .Toastify__toast--warning {
+  background-color: #f08c00; /* yellow-9 */
+  color: #fff9db; /* yellow-0 */
+}
+
+.toast-dark .Toastify__toast--info {
+  background-color: #1c7ed6; /* blue-9 */
+  color: #e7f5ff; /* blue-0 */
+}
+
+.toast-dark .Toastify__close-button {
+  color: #adb5bd; /* dark-2 */
+}
+
+.toast-dark .Toastify__progress-bar {
+  background: #b3b9ca; /* dark-3 */
+}
+
+/* LIGHT */
+.toast-light .Toastify__toast {
+  background-color: #ffffff; /* white */
+  color: #212529; /* dark-9 */
+  border: 1px solid #dee2e6; /* gray-3 */
+}
+
+.toast-light .Toastify__toast--success {
+  background-color: #e6fcf5; /* green-0 */
+  color: #087f5b; /* green-9 */
+  border-color: #96f2d7; /* green-3 */
+}
+
+.toast-light .Toastify__toast--error {
+  background-color: #fff5f5; /* red-0 */
+  color: #c92a2a; /* red-9 */
+  border-color: #faa2c1; /* red-3 */
+}
+
+.toast-light .Toastify__toast--warning {
+  background-color: #fff9db; /* yellow-0 */
+  color: #f08c00; /* yellow-9 */
+  border-color: #ffe066; /* yellow-3 */
+}
+
+.toast-light .Toastify__toast--info {
+  background-color: #e7f5ff; /* blue-0 */
+  color: #1c7ed6; /* blue-9 */
+  border-color: #74c0fc; /* blue-3 */
+}
+
+.toast-light .Toastify__close-button {
+  color: #868e96; /* gray-6 */
+}
+
+.toast-light .Toastify__progress-bar {
+  background: #cfd5da; /* gray-4 */
+}

@@ -1,0 +1,13 @@
+.paper {
+  background-color: var(--bg-primary);
+  width: 100%;
+}
+
+.label {
+  font-size: large;
+  font-weight: 600;
+}
+
+.value {
+  padding-top: 8px;
+}

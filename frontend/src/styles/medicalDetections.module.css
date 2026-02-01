@@ -1,0 +1,9 @@
+.medicalDetections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  padding: 1em;
+  /* max-width: 1200px; */
+  margin: 0 auto;
+}

@@ -1,0 +1,5 @@
+export enum PatientLevel {
+  ADVANCED = 'ADVANCED',
+  INTERMEDIATE = 'INTERMEDIATE',
+  BEGINNER = 'BEGINNER',
+}

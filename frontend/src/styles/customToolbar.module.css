@@ -1,0 +1,47 @@
+.container {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 0.8rem;
+  margin-bottom: 10px;
+  background-color: var(--calendar-bg);
+}
+
+.button {
+  margin: 0 auto;
+  background-color: var(--accent-primary); /* colore principale del tema */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  /* padding: 0.75rem 1.5rem; */
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.button:hover {
+  background-color: var(--accent-secondary);
+  transform: translateY(-1px);
+}
+
+.filter {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.filter:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}

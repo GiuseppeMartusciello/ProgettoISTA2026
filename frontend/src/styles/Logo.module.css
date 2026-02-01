@@ -1,0 +1,50 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.containerSmall {
+  height: 60px;
+}
+
+.containerBig {
+  height: 120px;
+}
+
+.logoWrapper {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+}
+
+.logo {
+  width: 120px;
+  padding-top: 0.2em;
+  height: auto;
+  display: block;
+  cursor: pointer;
+}
+
+.logoSmall {
+  width: 50px;
+}
+
+.logoBig {
+  width: 150px;
+}
+
+.title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  /* margin-top: 0.5rem; */
+  font-family: var(--font-family);
+}
+
+/* * {
+  border: 1px solid red;
+} */

@@ -1,0 +1,30 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-self: center;
+  /* border: 1px solid red; */
+  height: 100%;
+}
+
+.main {
+  width: fit-content;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 40px 100px;
+  /* border: 1px solid blue; */
+  min-width: 1000px;
+  height: fit-content;
+}
+
+.searchInput input {
+  border-radius: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.searchInput input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(var(--accent-primary-rgb), 0.1);
+}
