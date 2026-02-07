@@ -1,4 +1,4 @@
-import { PasswordInput, Popover, TextInput } from "@mantine/core";
+import { PasswordInput, TextInput } from "@mantine/core";
 import { StepProps } from "../types/registration-form";
 import styles from "../styles/Step.module.css";
 

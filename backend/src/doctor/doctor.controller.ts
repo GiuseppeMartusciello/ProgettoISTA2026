@@ -25,7 +25,7 @@ import { UpdatePatientDto } from 'src/auth/dto/update-patient.dto';
 @Controller('doctor')
 @UseGuards(RolesGuard)
 export class DoctorController {
-  constructor(private readonly doctorService: DoctorService) {}
+  constructor(private readonly doctorService: DoctorService) { }
 
   @Get('/patients')
   @Roles(UserRoles.DOCTOR)
@@ -33,7 +33,7 @@ export class DoctorController {
     @GetUser() user: UserItem,
     @Query('page') page = 1,
     @Query('limit') limit = 12,
-    @Query('search') search = undefined,
+    @Query('search') search: string | undefined = undefined,
   ) {
     return this.doctorService.getPatients(user.id, page, limit, search);
   }

@@ -6,13 +6,11 @@ import {
   Button,
   Space,
   Title,
-  Loader,
 } from "@mantine/core";
-import { useForm, UseFormReturnType } from "@mantine/form";
+import { useForm } from "@mantine/form";
 import styles from "../styles/addMedicalExaminationModal.module.css";
 import { toast } from "react-toastify";
 import { useAddMedicalExamination } from "../hooks/use-add-medical-examination.mutation";
-import { useNavigate } from "react-router-dom";
 
 type AddVisitModalProps = {
   opened: boolean;

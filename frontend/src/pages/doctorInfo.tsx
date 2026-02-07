@@ -48,7 +48,7 @@ export default function DoctorInfo() {
   return (
     <div className={styles.container}>
       <Paper radius="md" p="md">
-        <BackButton position="static" />
+        <BackButton position="static" path={undefined} />
 
         {/* Intestazione profilo */}
         <div className={styles.profileHeader}>

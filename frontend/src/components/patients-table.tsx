@@ -1,6 +1,6 @@
 import { usePatients } from "../hooks/use-patients";
 import { PatientItem } from "../types/patient.interface";
-import { ActionIcon, Box, Group, Loader, Space, Text } from "@mantine/core";
+import { ActionIcon, Box, Loader, Space } from "@mantine/core";
 import { IconUser } from "@tabler/icons-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "@mantine/core/styles.css";
@@ -97,7 +97,7 @@ export default function PatientsTable() {
     },
     renderRowActions: ({ row }) => (
       <Box
-        style={(theme) => ({
+        style={() => ({
           padding: "8px",
           cursor: "pointer",
           transition: "all 0.2s ease",
