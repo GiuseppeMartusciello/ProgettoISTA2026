@@ -1,4 +1,4 @@
-import { addDays, format } from "date-fns";
+import { format } from "date-fns";
 import { useMedicalDetection } from "../hooks/use-medical-detection";
 import { MedicalDetectionType } from "../types/medical-detection-type";
 import { useCallback, useEffect, useMemo } from "react";
@@ -12,7 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-import { Box, Space, Title } from "@mantine/core";
+import { Title } from "@mantine/core";
 import styles from "../styles/medicalDetectionChart.module.css";
 
 interface Props {
@@ -31,14 +31,14 @@ type DetectionLabel = {
 export function MedicalDetection({
   patientId,
   type,
-  startDate = new Date().toISOString(),
-  endDate = addDays(new Date(), 7).toISOString(),
+  //startDate = new Date().toISOString(),
+  //endDate = addDays(new Date(), 7).toISOString(),
 }: Props) {
-  const { data: detections, isLoading } = useMedicalDetection(
+  const { data: detections } = useMedicalDetection(
     patientId,
     type,
-    startDate,
-    endDate
+    //startDate,
+    //endDate
   );
 
   const label = useCallback((type: MedicalDetectionType): DetectionLabel => {

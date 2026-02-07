@@ -10,8 +10,8 @@ import {
   IconUser,
 } from "@tabler/icons-react";
 import { useUser } from "../context/UserContext";
-import { useCallback, useContext, useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useState } from "react";
+
 import { useLogoutMutation } from "../hooks/use-logout-mutation";
 import { useDebouncedValue } from "@mantine/hooks";
 
@@ -23,7 +23,6 @@ export function NavBar() {
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [debouncedSearch] = useDebouncedValue(search, 400); // 400 ms di debounce
 
-  const query = useQueryClient();
   const mutation = useLogoutMutation();
 
   const handleLogout = useCallback(() => {
@@ -41,7 +40,7 @@ export function NavBar() {
     }
 
     setSearchParams(newParams);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, setSearchParams]);
 
   // const handleSearchSubmit = (e: React.FormEvent) => {
   //   e.preventDefault();
@@ -111,13 +110,12 @@ export function NavBar() {
                 withBorder
               >
                 <Avatar
-                  color={`${
-                    user?.gender === "Uomo"
-                      ? "cyan"
-                      : user?.gender === "Donna"
+                  color={`${user?.gender === "Uomo"
+                    ? "cyan"
+                    : user?.gender === "Donna"
                       ? "pink"
                       : "gray"
-                  }`}
+                    }`}
                 >
                   {`${user?.name[0].toUpperCase()}${user?.surname[0].toUpperCase()} `}
                 </Avatar>
@@ -154,6 +152,6 @@ export function NavBar() {
           </Menu.Dropdown>
         </Menu>
       </div>
-    </header>
+    </header >
   );
 }

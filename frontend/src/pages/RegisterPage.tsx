@@ -1,6 +1,6 @@
 import styles from "../styles/Register.module.css";
 import { useForm } from "@mantine/form";
-import { Box, Group, Paper, Button, Stepper } from "@mantine/core";
+import { Paper, Button, Stepper } from "@mantine/core";
 
 import { useState } from "react";
 import Step1 from "../components/step1-registration";
@@ -20,7 +20,6 @@ export default function RegisterPage() {
   const [active, setActive] = useState(0);
   const mutation = useRegisterMutation();
   const [highestStepVisited, setHighestStepVisited] = useState(active);
-  const [disabled, setDisabled] = useState(false);
 
   const stepSchemas = [step1Schema, step2Schema, step3Schema, step4Schema];
 

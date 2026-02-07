@@ -1,7 +1,6 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { EventWrapperProps } from "react-big-calendar";
 import {
-  Box,
   Button,
   Divider,
   Popover,
@@ -17,7 +16,6 @@ import {
   Venus,
   NonBinary,
   UserIcon,
-  Icon,
   CirclePlus,
 } from "lucide-react";
 
@@ -26,7 +24,6 @@ import styles from "../styles/calendar.module.css";
 import { useNavigate } from "react-router-dom";
 import { usePatchReservationMutation } from "../hooks/use-patch-reservation.mutation";
 import { useClickOutside, useDisclosure } from "@mantine/hooks";
-import { useAddMedicalExamination } from "../hooks/use-add-medical-examination.mutation";
 import AddVisitModal from "./AddMedicalExaminationModal";
 
 interface Props extends EventWrapperProps<ReservationCalendarEvent> {
@@ -84,7 +81,7 @@ export const EventWrapperWithPopover: React.FC<Props> = ({
       <Popover
         opened={isOpen}
         onClose={
-          () => {}
+          () => { }
           // setSelectedEvent(undefined)
         }
         withArrow
@@ -130,15 +127,15 @@ export const EventWrapperWithPopover: React.FC<Props> = ({
                 Data creazione <Calendar1Icon size={15} />
                 {selectedEvent?.createdAt
                   ? new Date(selectedEvent.createdAt).toLocaleDateString(
-                      "it-IT",
-                      {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }
-                    )
+                    "it-IT",
+                    {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }
+                  )
                   : "—"}
               </Text>
               {/* <Text fw={900}>

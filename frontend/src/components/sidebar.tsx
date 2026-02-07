@@ -1,10 +1,9 @@
-import { CalendarPlus2, LogOut, NotebookPen, UserPlus } from "lucide-react";
+import { CalendarPlus2, NotebookPen, UserPlus } from "lucide-react";
 import { usePatients } from "../hooks/use-patients";
 import styles from "../styles/sidebar.module.css";
 
 import { IconUsers, IconClipboardList } from "@tabler/icons-react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useLogoutMutation } from "../hooks/use-logout-mutation";
 import { useReservationCounts } from "../hooks/use-reservations";
 
 interface NavItemProps {

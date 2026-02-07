@@ -1,4 +1,4 @@
-import { Box, Button, Group, Stepper, Paper } from "@mantine/core";
+import { Button, Group, Stepper, Paper } from "@mantine/core";
 import styles from "../styles/addPatient.module.css";
 import { useForm } from "@mantine/form";
 import { useAddPatientMutation } from "../hooks/use-add-patient.mutation";

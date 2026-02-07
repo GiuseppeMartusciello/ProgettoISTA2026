@@ -2,7 +2,7 @@ import { useLoginMutation } from "../hooks/use-login-mutation";
 import { useUser } from "../context/UserContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
-import { Divider, PasswordInput, Space, Text, TextInput } from "@mantine/core";
+import { PasswordInput, Space, TextInput } from "@mantine/core";
 
 import styles from "../styles/Login.module.css";
 

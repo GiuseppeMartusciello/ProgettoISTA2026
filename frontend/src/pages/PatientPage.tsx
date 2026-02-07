@@ -1,9 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { usePatient } from "../hooks/use-patients";
 import {
-  Accordion,
   Avatar,
-  Box,
   Button,
   Divider,
   Loader,
@@ -18,15 +16,11 @@ import styles from "../styles/PatientPage.module.css";
 import InfoCard from "../components/InfoCard";
 import {
   Accessibility,
-  Activity,
   Building2,
   CirclePlus,
   Droplet,
-  FileText,
   HeartPulse,
-  Hospital,
   House,
-  Icon,
   IdCard,
   Mail,
   MapPin,
@@ -40,7 +34,6 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import QRCode from "react-qr-code";
 import BackButton from "../components/BackButton";
-import MedicalDetections from "../components/MedicalDetections";
 import MedicalExaminations from "../components/MedicalExaminations";
 
 export default function PatientPage() {

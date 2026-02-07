@@ -165,8 +165,8 @@ export async function addMedicalExamination(
 export async function getMedicalDetections(
   patientId: string,
   type: MedicalDetectionType,
-  startDate: string | undefined,
-  endDate: string | undefined
+  //startDate: string | undefined,
+  //endDate: string | undefined
 ) {
   const params = new URLSearchParams();
 

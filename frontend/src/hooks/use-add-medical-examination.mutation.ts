@@ -1,13 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
-import { addMedicalExamination, addPatient } from "../api/doctor";
-import { useNavigate } from "react-router-dom";
+import { addMedicalExamination } from "../api/doctor";
 import { MedicalExaminationDTO } from "../types/medical-examination.dto";
 
 export const useAddMedicalExamination = (onSuccess: () => void) => {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
 
   return useMutation({
     mutationFn: ({

@@ -1,4 +1,4 @@
-import { Select, Space, TextInput, Title } from "@mantine/core";
+import { Select, Space, TextInput } from "@mantine/core";
 import { StepProps } from "../types/patient-registration-form";
 // import { useState } from "react";
 import styles from "../styles/Step.module.css";
