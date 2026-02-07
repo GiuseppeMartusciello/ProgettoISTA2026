@@ -44,4 +44,14 @@ export class User {
 
   @Column()
   province: string;
+
+  @Column({ default: false })
+  twoFactorEnabled: boolean;
+
+  @Column({ type: 'varchar', nullable: true })
+  twoFactorSecret: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  twoFactorSecretPending: string | null;
+
 }

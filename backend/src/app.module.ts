@@ -11,33 +11,34 @@ import { AvailabilityModule } from './availability/availability.module';
 import { ReservationModule } from './reservation/reservation.module';
 import { AuthMiddleware } from './auth/middleware/auth.middleware';
 import { MedicalDetectionModule } from './medical-detection/medical-detection.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
     // Config globale
-   ConfigModule.forRoot({
-      isGlobal: true,
-      // in produzione (Render) usa solo le env, in locale puoi usare .env
-      envFilePath: '.env',
-    }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      // in produzione (Render) usa solo le env, in locale puoi usare .env
+      envFilePath: '.env',
+    }),
 
-    // TypeORM + Supabase
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        type: 'postgres',
-        // 🛑 SOSTITUISCI TUTTE LE VARIABILI SEPARATE CON 'url'
-        url: configService.get<string>('DATABASE_URL'), // <-- Ora usa l'URL completo
-        autoLoadEntities: true,
-        synchronize: false,
-        // La configurazione SSL è fondamentale per Supabase, specialmente su Render
-        ssl: {
-          rejectUnauthorized: false,
-        },
-      }),
-    }),
-    
+    // TypeORM + Supabase
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        type: 'postgres',
+        //
+        url: configService.get<string>('DATABASE_URL'), // <-- Ora usa l'URL completo
+        autoLoadEntities: true,
+        synchronize: false,
+        // La configurazione SSL è fondamentale per Supabase, specialmente su Render
+        ssl: {
+          rejectUnauthorized: false,
+        },
+      }),
+    }),
+
     AuthModule,
     PatientModule,
     DoctorModule,
@@ -47,6 +48,7 @@ import { MedicalDetectionModule } from './medical-detection/medical-detection.mo
     AvailabilityModule,
     ReservationModule,
     MedicalDetectionModule,
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),
   ],
   controllers: [],
 })
@@ -60,6 +62,7 @@ export class AppModule {
         { path: 'auth/check/cf/:cf', method: RequestMethod.GET },
         { path: 'auth/signup', method: RequestMethod.POST },
         { path: 'auth/signin', method: RequestMethod.POST },
+        { path: 'auth/2fa/verify', method: RequestMethod.POST },
         { path: 'invite/:id', method: RequestMethod.GET },
         { path: 'invite/:id/accept', method: RequestMethod.POST },
       )
