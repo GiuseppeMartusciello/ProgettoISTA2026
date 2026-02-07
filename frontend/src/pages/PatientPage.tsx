@@ -40,14 +40,14 @@ export default function PatientPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
+  const [opened, handler] = useDisclosure(false);
+
+  const { data: patient, isLoading, isError } = usePatient(id || "");
+
   console.log("Id pazient: ", id);
   if (!id) {
     return <div>Errore nel Caricamento...</div>;
   }
-
-  const [opened, handler] = useDisclosure(false);
-
-  const { data: patient, isLoading, isError } = usePatient(id);
 
   if (isLoading)
     return (
