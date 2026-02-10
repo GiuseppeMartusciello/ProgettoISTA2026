@@ -1,4 +1,5 @@
 import api from "../services/axiosInstance";
+import { LoginResponse } from "../types/loginResponse";
 import { RegisterInfo } from "../types/registration-form";
 import { User } from "../types/user.interface";
 
@@ -11,15 +12,23 @@ interface CheckResponse {
   message: string;
   exist: boolean;
 }
+export async function verify2FA(challengeId: string, code: string) {
+  const res = await api.post<User>(
+    "/auth/2fa/verify",
+    { challengeId, code },
+    { withCredentials: true }
+  );
+  console.log("2FA verification response: ", res.data);
+
+  return res.data;
+}
 
 export async function login({ email, password }: LoginData) {
-  const res = await api.post<User>(
+  const res = await api.post<LoginResponse>(
     "/auth/signin",
     { email, password },
     { withCredentials: true }
   );
-
-  // console.log("Res: ", res);
   console.log("Utente: ", res.data);
 
   return res.data;

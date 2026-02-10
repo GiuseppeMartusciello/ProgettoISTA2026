@@ -20,7 +20,7 @@ export const useRegisterMutation = () => {
       else toast.success(`Benvenutx ${user.name} :)`);
 
       console.log("entro qua dentro");
-      navigate("/home");
+      navigate("/patients");
     },
     onError: (error: AxiosError<any>) => {
       let message = error?.response?.data?.message || "Errore sconosciuto";
