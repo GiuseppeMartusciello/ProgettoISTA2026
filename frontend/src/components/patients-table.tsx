@@ -106,7 +106,7 @@ export default function PatientsTable() {
             opacity: 0.85,
           },
         })}
-        onClick={() => navigate(`/patients/${row.original.id}`)}
+        onClick={() => navigate(`/patients/${row.original.id}`, { replace: true })}
       >
         <ActionIcon
           variant="subtle"
@@ -116,9 +116,6 @@ export default function PatientsTable() {
         >
           <IconUser size={22} />
         </ActionIcon>
-        {/* <Text size="sm" c="blue.7" fw={500}>
-          Visualizza profilo
-        </Text> */}
       </Box>
     ),
   });
