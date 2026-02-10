@@ -15,6 +15,7 @@ export default function Container() {
           error?.response?.status === 401 &&
           !location.pathname.startsWith("/auth/2fa") &&
           !location.pathname.startsWith("/2fa") &&
+          !location.pathname.startsWith("/settings/two-factor-auth")
         ) {
           console.log("Unauthorized! Redirecting to login...");
           navigate("/login");

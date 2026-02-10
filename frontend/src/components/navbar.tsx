@@ -14,6 +14,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useLogoutMutation } from "../hooks/use-logout-mutation";
 import { useDebouncedValue } from "@mantine/hooks";
+import { Settings } from "lucide-react";
 
 export function NavBar() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -22,6 +23,7 @@ export function NavBar() {
   const { user } = useUser();
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [debouncedSearch] = useDebouncedValue(search, 400); // 400 ms di debounce
+  const [menuOpened, setMenuOpened] = useState(false);
 
   const mutation = useLogoutMutation();
 
@@ -30,17 +32,19 @@ export function NavBar() {
   }, [mutation]);
 
   useEffect(() => {
-    const newParams = new URLSearchParams({
-      page: "1",
-      limit: "12",
-    });
+    if (location.pathname === "/patients") {
+      const newParams = new URLSearchParams({
+        page: "1",
+        limit: "12",
+      });
 
-    if (debouncedSearch.trim()) {
-      newParams.set("search", debouncedSearch.trim());
+      if (debouncedSearch.trim()) {
+        newParams.set("search", debouncedSearch.trim());
+      }
+
+      setSearchParams(newParams);
     }
-
-    setSearchParams(newParams);
-  }, [debouncedSearch, setSearchParams]);
+  }, [debouncedSearch, setSearchParams, location.pathname]);
 
   // const handleSearchSubmit = (e: React.FormEvent) => {
   //   e.preventDefault();
@@ -88,17 +92,20 @@ export function NavBar() {
         </div>
       )}
 
-      {/* Actions Section */}
       <div className={styles.actions}>
         {/* Notifications */}
 
-        {/* Theme Toggle */}
         <div className={styles.actionButton}>
           <ThemeToggle absolute={false} />
         </div>
 
-        {/* User Menu */}
-        <Menu shadow="md" width={200} position="bottom-end">
+        <Menu
+          shadow="md"
+          width={"target"}
+          position="bottom-end"
+          opened={menuOpened}
+          onChange={setMenuOpened}
+        >
           <Menu.Target>
             <div className={styles.userProfile}>
               <Indicator
@@ -110,12 +117,13 @@ export function NavBar() {
                 withBorder
               >
                 <Avatar
-                  color={`${user?.gender === "Uomo"
-                    ? "cyan"
-                    : user?.gender === "Donna"
-                      ? "pink"
-                      : "gray"
-                    }`}
+                  color={`${
+                    user?.gender === "Uomo"
+                      ? "cyan"
+                      : user?.gender === "Donna"
+                        ? "pink"
+                        : "gray"
+                  }`}
                 >
                   {`${user?.name[0].toUpperCase()}${user?.surname[0].toUpperCase()} `}
                 </Avatar>
@@ -129,16 +137,29 @@ export function NavBar() {
                 </Text>
               </div>
 
-              <IconChevronDown size={14} className={styles.chevron} />
+              <IconChevronDown
+                size={14}
+                className={styles.chevron}
+                style={{
+                  transform: menuOpened ? "rotate(180deg)" : undefined,
+                  transition: "transform 0.2s ease",
+                }}
+              />
             </div>
           </Menu.Target>
 
           <Menu.Dropdown>
             <Menu.Item
               leftSection={<IconUser size={16} />}
-              onClick={() => navigate("/doctor-page")}
+              onClick={() => navigate({ pathname: "/doctor-page" }, { replace: true })}
             >
               Profilo
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<Settings size={16} />}
+              onClick={() => navigate({ pathname: "/settings/two-factor-auth" }, { replace: true })}
+            >
+              Impostazioni
             </Menu.Item>
 
             <Menu.Divider />
@@ -152,6 +173,6 @@ export function NavBar() {
           </Menu.Dropdown>
         </Menu>
       </div>
-    </header >
+    </header>
   );
 }

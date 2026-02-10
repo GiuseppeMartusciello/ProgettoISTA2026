@@ -146,9 +146,7 @@
   transition: transform 0.2s ease;
 }
 
-.userProfile:hover .chevron {
-  transform: rotate(180deg);
-}
+
 
 /* Responsive design */
 @media (max-width: 768px) {
