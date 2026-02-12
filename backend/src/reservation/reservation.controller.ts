@@ -121,7 +121,7 @@ export class ReservationController {
       throw new BadRequestException('Patient`s doctor doesn`t exist');
     }
 
-    return this.reservationService.createReservation(
+    return this.reservationService.createReservationByPatient(
       user.patient.doctor,
       user.patient,
       body,
@@ -138,7 +138,7 @@ export class ReservationController {
       throw new UnauthorizedException('You are not a doctor');
     }
 
-    return this.reservationService.createReservationForPatient(
+    return this.reservationService.createReservationByDoctor(
       user.doctor,
       body,
     );
