@@ -1,5 +1,3 @@
-import { PatchedReservation } from "../hooks/use-patch-reservation.mutation";
-import { Range } from "../hooks/use-reservations";
 import api from "../services/axiosInstance";
 import { CreateAvailabilityDto } from "../types/create-availabilty.dto";
 import { CreatePatientDto } from "../types/create-patient.dto";
@@ -7,8 +5,8 @@ import { MedicalDetectionType } from "../types/medical-detection-type";
 import { MedicalExaminationDTO } from "../types/medical-examination.dto";
 import { MedicalExaminationsResponse } from "../types/medicalExaminationResponse.interface";
 import { Doctor } from "../types/patient-registration-form";
-import { GroupedReservations, ReservationsDTO } from "../types/reservation";
-import { ReservationItem } from "../types/reservation-item";
+import { Range } from "../hooks/use-reservations";
+
 
 export async function fetchDoctor() {
   const res = await api.get<Doctor>("doctor/me", {
@@ -70,84 +68,6 @@ export async function deleteAvailability(idAvailability: string) {
   return res.data.id;
 }
 
-export async function fetchReservations(
-  range: Range | null,
-  status: "ALL" | "CONFIRMED" | "PENDING"
-) {
-  const params = new URLSearchParams();
-
-  if (range) {
-    if (range?.start) params.append("start", range.start.toISOString());
-    if (range?.end) params.append("end", range.end.toISOString());
-  }
-
-  if (status) params.append("status", status);
-
-  const res = await api.get<GroupedReservations[]>(
-    `reservations?${params.toString()}`,
-
-    {
-      withCredentials: true,
-    }
-  );
-
-  console.log("Prenotazioni", res.data);
-
-  return res.data;
-}
-
-export async function fetchReservationsTable(
-  patient: string | null,
-  page: null | number,
-  limit: null | number,
-  search: null | string
-) {
-  const params = new URLSearchParams();
-
-  if (page) params.append("page", page.toString());
-
-  if (limit) params.append("limit", limit.toString());
-
-  if (search) params.append("search", search);
-
-  params.append("status", "CONFIRMED");
-
-  const res = await api.get<{ total: number; reservations: ReservationItem[] }>(
-    `reservations/${patient}/?${params.toString()}`,
-
-    {
-      withCredentials: true,
-    }
-  );
-
-  console.log("Prenotazioni tabella", res.data);
-
-  return res.data;
-}
-
-export async function patchReservation(reservation: PatchedReservation) {
-  await api.patch<ReservationsDTO>(
-    `reservations/${reservation.reservationId}/${reservation.status}`,
-    {
-      withCredentials: true,
-    }
-  );
-
-  return reservation.status;
-}
-
-export async function fetchHowManyReservations() {
-  const res = await api.get<{ total: number }>(
-    `reservations/count`,
-
-    {
-      withCredentials: true,
-    }
-  );
-
-  console.log("Count ", res.data);
-  return res.data;
-}
 
 export async function addMedicalExamination(
   medicalExamination: MedicalExaminationDTO,
