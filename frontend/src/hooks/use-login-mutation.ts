@@ -4,6 +4,7 @@ import { useUser } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
+import { showLoginSuccessToast } from "../utils/login.utils";
 
 export const useLoginMutation = () => {
   const { login } = useUser();
@@ -13,16 +14,16 @@ export const useLoginMutation = () => {
     mutationFn: (data: { email: string; password: string }) =>
       login(data.email, data.password),
 
-    onSuccess: async (user, _variables) => {
-      console.log(user);
+    onSuccess: async (result, _variables) => {
 
-      if (user.gender === "Uomo") toast.success(`Benvenuto ${user.name} :)`);
-      else if (user.gender === "Donna")
-        toast.success(`Benvenuta ${user.name} :)`);
-      else toast.success(`Benvenutx ${user.name} :)`);
-
-      console.log("entro qua dentro");
-      navigate("/home");
+      if(result.requires2fa) { 
+        navigate(`/auth/2fa?challengeId=${result.challengeId}`, { replace: true });
+        toast.info("Autenticazione a due fattori richiesta.");
+      }
+      else {
+        showLoginSuccessToast(result.user);
+        navigate("/patients", { replace: true });
+      }
     },
     onError: (error: AxiosError<any>) => {
       let message = error?.response?.data?.message || "Errore sconosciuto";

@@ -9,10 +9,13 @@ import { Session } from '../session/session.entity';
 import { Doctor } from 'src/doctor/doctor.entity';
 import { Patient } from 'src/patient/patient.entity';
 
+import { AuthChallenge } from './auth-challenge.entity';
+import { TwoFactorService } from './two-factor.service';
+
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([User, Doctor, Session, Patient]),
+    TypeOrmModule.forFeature([User, Doctor, Session, Patient, AuthChallenge]),
     // PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -27,9 +30,10 @@ import { Patient } from 'src/patient/patient.entity';
   ],
   providers: [
     AuthService,
+    TwoFactorService,
     //JwtStrategy
   ],
   controllers: [AuthController],
   exports: [AuthService, TypeOrmModule],
 })
-export class AuthModule {}
+export class AuthModule { }

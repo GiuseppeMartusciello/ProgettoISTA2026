@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -20,13 +21,22 @@ import { Doctor } from 'src/doctor/doctor.entity';
 import { LogoutDto } from './dto/logout.dto';
 import { UserRoles } from 'src/common/enum/roles.enum';
 import { UserItem } from 'src/common/types/userItem';
-import { addDays } from 'date-fns';
+import { addDays, addMinutes } from 'date-fns';
 import { Patient } from 'src/patient/patient.entity';
+import { AuthChallenge } from './auth-challenge.entity';
+import { TwoFactorService } from './two-factor.service';
+import { v4 as uuid } from 'uuid';
+import * as qrcode from 'qrcode';
 
 interface AuthResponse {
   accessToken: string;
   refreshToken: string;
   user: UserItem;
+}
+
+interface TwoFactorResponse {
+  requires2fa: true;
+  challengeId: string;
 }
 
 @Injectable()
@@ -44,8 +54,13 @@ export class AuthService {
     @InjectRepository(Patient)
     private readonly patientRepository: Repository<Patient>,
 
+    @InjectRepository(AuthChallenge)
+    private readonly challengeRepository: Repository<AuthChallenge>,
+
+    private readonly twoFactorService: TwoFactorService,
+
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async checkEmailExists(email: string) {
     const exist = await this.userRepository.findOne({
@@ -111,7 +126,7 @@ export class AuthService {
   async signIn(
     credentials: AuthCredentialsDto,
     deviceInfo: DeviceInfo,
-  ): Promise<AuthResponse> {
+  ): Promise<AuthResponse | TwoFactorResponse> {
     const { email, password } = credentials;
 
     const user = await this.userRepository.findOne({
@@ -122,6 +137,25 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // 2FA login check
+    if (user.twoFactorEnabled) {
+      const challengeId = uuid();
+      const challenge = this.challengeRepository.create({
+        challengeId,
+        userId: user.id,
+        type: 'LOGIN_2FA',
+        expiresAt: addMinutes(new Date(), 5),
+        attempts: 0,
+        maxAttempts: 5,
+      });
+      await this.challengeRepository.save(challenge);
+      return { requires2fa: true, challengeId };
+    }
+
+    return this.completeLogin(user, deviceInfo);
+  }
+
+  private async completeLogin(user: User, deviceInfo: DeviceInfo): Promise<AuthResponse> {
     let finalUser: UserItem = user;
     if (user.role === UserRoles.DOCTOR) {
       const doctor = await this.doctorRepository.findOne({
@@ -156,8 +190,109 @@ export class AuthService {
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
-      user: user,
+      user: finalUser,
     };
+  }
+
+  async verify2fa(challengeId: string, code: string, deviceInfo: DeviceInfo): Promise<AuthResponse> {
+    const challenge = await this.challengeRepository.findOne({ where: { challengeId } });
+
+    if (!challenge) {
+      // Simulate verification to prevent timing attacks? Or just generic error
+      throw new UnauthorizedException('Invalid challenge or code');
+    }
+
+    if (challenge.type !== 'LOGIN_2FA' || challenge.expiresAt < new Date()) {
+      await this.challengeRepository.remove(challenge);
+      throw new UnauthorizedException('Challenge expired or invalid');
+    }
+
+    if (challenge.attempts >= challenge.maxAttempts) {
+      await this.challengeRepository.remove(challenge);
+      throw new UnauthorizedException('Too many attempts');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: challenge.userId },
+    });
+    // Ensure twoFactorSecret is present and verify
+    if (!user || !user.twoFactorSecret) {
+      await this.challengeRepository.remove(challenge);
+      throw new UnauthorizedException('User 2FA not properly configured'); // Should not happen if logic is correct
+    }
+
+    const isValid = this.twoFactorService.isTwoFactorCodeValid(
+      code,
+      user.twoFactorSecret,
+    );
+
+    if (!isValid) {
+      challenge.attempts += 1;
+      await this.challengeRepository.save(challenge);
+      throw new UnauthorizedException('Invalid code');
+    }
+
+    // Success
+    await this.challengeRepository.remove(challenge);
+    return this.completeLogin(user, deviceInfo);
+  }
+
+  async generate2faSecret(user: User) {
+    const { secret, otpauthUrl } = this.twoFactorService.generateSecret(
+      user.email,
+    );
+    const qrPngBase64 = await qrcode.toDataURL(otpauthUrl);
+
+    user.twoFactorSecretPending = secret;
+    await this.userRepository.save(user);
+
+    return { otpauthUrl, qrPngBase64 };
+  }
+
+  async confirm2fa(user: User, code: string) {
+    if (!user.twoFactorSecretPending) {
+      throw new BadRequestException('No pending 2FA setup found');
+    }
+
+    const isValid = this.twoFactorService.isTwoFactorCodeValid(
+      code,
+      user.twoFactorSecretPending,
+    );
+    if (!isValid) {
+      throw new BadRequestException('Invalid code');
+    }
+
+    user.twoFactorSecret = user.twoFactorSecretPending;
+    user.twoFactorSecretPending = null;
+    user.twoFactorEnabled = true;
+
+    await this.userRepository.save(user);
+
+    return { enabled: true };
+  }
+
+  async disable2fa(user: User, code: string) {
+    if (!user.twoFactorEnabled || !user.twoFactorSecret) {
+      throw new BadRequestException('2FA not enabled');
+    }
+
+    // Verify code against current secret
+    // Note: Reusing the same service which uses the same window options
+    const isValid = this.twoFactorService.isTwoFactorCodeValid(
+      code,
+      user.twoFactorSecret,
+    );
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid code');
+    }
+
+    user.twoFactorEnabled = false;
+    user.twoFactorSecret = null;
+    user.twoFactorSecretPending = null;
+
+
+    await this.userRepository.save(user);
+    return { message: '2FA disabled' };
   }
 
   async refreshToken(refreshToken: string): Promise<string> {

@@ -20,6 +20,9 @@ import CalendarReservations from "./pages/CalendarReservation";
 import DoctorInfo from "./pages/doctorInfo";
 import ReservationsRequests from "./pages/ReservationsRequests";
 import AddMedicalExamination from "./pages/AddMedicalExaminationPage";
+import { TwoFAPage } from "./pages/2faPage";
+import { SettingsPage } from "./pages/settingsPage";
+import { TwoFactorAuthSettings } from "./components/auth2faSettings";
 
 function ThemedToastContainer() {
   const { colorScheme } = useTheme();
@@ -80,10 +83,14 @@ function App() {
                 path="/add-examination/:patient"
                 element={<AddMedicalExamination />}
               />
+              <Route path="/settings" element={<SettingsPage />} > 
+              <Route path="two-factor-auth" element={<TwoFactorAuthSettings />} /> 
+              </Route>
             </Route>
 
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="auth/2fa" element={<TwoFAPage />} />
 
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
