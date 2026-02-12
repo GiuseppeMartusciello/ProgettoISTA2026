@@ -19,6 +19,7 @@ import { ReservationService } from './reservation.service';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/role.decorator';
 import { CreateReservationDto } from './dto/create-reservation.dto';
+import { CreateDoctorReservationDto } from './dto/create-doctor-reservation.dto';
 import { GetUser } from 'src/auth/get-user-decorator';
 import { UserItem } from 'src/common/types/userItem';
 import { UserRoles } from 'src/common/enum/roles.enum';
@@ -127,6 +128,22 @@ export class ReservationController {
     );
   }
 
+  @Post('/for-patient')
+  @Roles(UserRoles.DOCTOR, UserRoles.ADMIN)
+  async createReservationForPatient(
+    @GetUser() user: UserItem,
+    @Body() body: CreateDoctorReservationDto,
+  ) {
+    if (!user.doctor) {
+      throw new UnauthorizedException('You are not a doctor');
+    }
+
+    return this.reservationService.createReservationForPatient(
+      user.doctor,
+      body,
+    );
+  }
+
   @Patch('/:reservationId/confirm')
   @Roles(UserRoles.DOCTOR, UserRoles.ADMIN)
   async acceptReservation(
@@ -161,20 +178,34 @@ export class ReservationController {
   }
 
   @Get('/slots')
-  @Roles(UserRoles.PATIENT, UserRoles.ADMIN)
+  @Roles(UserRoles.PATIENT, UserRoles.DOCTOR, UserRoles.ADMIN)
   async getSlots(
     @GetUser() user: UserItem,
     @Query('date') date: string,
     @Query('visitType') visitType: VisitTypeEnum = VisitTypeEnum.CONTROL,
   ) {
-    const patient = user.patient;
+    let doctor;
 
-    if (!patient) throw new UnauthorizedException('You are not a patient');
+    // Se l'utente è un dottore, usa direttamente user.doctor
+    if (user.doctor) {
+      doctor = user.doctor;
+    } 
+    // Se l'utente è un paziente, usa patient.doctor
+    else if (user.patient) {
+      if (!user.patient.doctor) {
+        throw new BadRequestException('Patient does not have an assigned doctor');
+      }
+      doctor = user.patient.doctor;
+    } 
+    // Se non è né dottore né paziente
+    else {
+      throw new UnauthorizedException('User must be a doctor or patient');
+    }
 
     const localDate = moment.tz(date, 'YYYY-MM-DD', 'Europe/Rome').format();
 
     const slots = await this.reservationService.getReservationSlots(
-      patient.doctor,
+      doctor,
       localDate,
       visitType,
     );
@@ -195,10 +226,24 @@ export class ReservationController {
   }
 
   @Get('/isFirstVisit')
-  @Roles(UserRoles.PATIENT)
-  async isFirstVisit(@GetUser() user: UserItem) {
-    if (!user.patient) throw new UnauthorizedException();
+  @Roles(UserRoles.PATIENT, UserRoles.DOCTOR, UserRoles.ADMIN)
+  async isFirstVisit(
+    @GetUser() user: UserItem,
+    @Query('patientId') patientId?: string,
+  ) {
+    // If user is a doctor, they must provide a patientId
+    if (user.doctor) {
+      if (!patientId) {
+        throw new BadRequestException('patientId is required for doctors');
+      }
+      return this.reservationService.isFirstVisitForDoctor(
+        user.doctor,
+        patientId,
+      );
+    }
 
+    // If user is a patient, check their own status
+    if (!user.patient) throw new UnauthorizedException();
     return this.reservationService.isFirstVisit(user.patient);
   }
 

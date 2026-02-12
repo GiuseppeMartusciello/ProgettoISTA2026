@@ -3,6 +3,7 @@ import { ReservationService } from './reservation.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Reservation } from './reservation.entity';
 import { Availability } from '../availability/availability.entity';
+import { Patient } from '../patient/patient.entity';
 import { VisitType } from './visit-type.entity';
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { ReservationStatus } from './types/reservation-status-enum';
@@ -56,6 +57,13 @@ describe('ReservationService', () => {
                 {
                     provide: getRepositoryToken(VisitType),
                     useValue: { findOne: jest.fn() }
+                },
+                {
+                    provide: getRepositoryToken(Patient),
+                    useValue: {
+                        findOne: jest.fn(),
+                        createQueryBuilder: jest.fn(() => createMockQueryBuilder()),
+                    }
                 },
             ],
         }).compile();
