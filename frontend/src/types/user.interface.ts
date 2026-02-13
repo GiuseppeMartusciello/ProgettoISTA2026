@@ -20,4 +20,7 @@ export interface User {
     orderType: string;
     specialization: string;
   };
+  twoFactorEnabled: boolean;
+  twoFactorSecret: string | null;
+  twoFactorRecoveryCodes: string[] | null;
 }

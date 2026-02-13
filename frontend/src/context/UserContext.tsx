@@ -11,18 +11,21 @@ import {
   login as loginFunction,
   logout as logoutFunction,
   register as registerFunction,
+  verify2FA,
 } from "../api/auth";
 import { fetchUserMe } from "../api/user";
 import { RegisterInfo } from "../types/registration-form";
+import { LoginResponse } from "../types/loginResponse";
 
 interface UserContextType {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<User>;
+  login: (email: string, password: string) => Promise<LoginResponse>;
   logout: () => Promise<void>;
   register: (data: RegisterInfo) => Promise<User>;
+  twoFactorAuthenticate: (challengeId: string, code: string) => Promise<User>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -46,22 +49,32 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const user = await loginFunction({ email, password });
+    const response = await loginFunction({ email, password });
 
-    setUser(user);
-    return user;
+    if (!response.requires2fa) {
+      setUser(response.user);
+    }
+    return response;
+
   };
 
   const register = async (data: RegisterInfo) => {
-    const user = await registerFunction(data);
+    const response = await registerFunction(data);
 
-    setUser(user);
-    return user;
+    setUser(response.user);
+    return response.user;
   };
 
   const logout = async () => {
     await logoutFunction();
     setUser(null);
+  };
+
+
+  const twoFactorAuthenticate = async (challengeId: string, code: string) => {
+    const response = await verify2FA(challengeId, code);
+    setUser(response);
+    return response;
   };
 
   return (
@@ -74,6 +87,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         register,
+        twoFactorAuthenticate
       }}
     >
       {children}

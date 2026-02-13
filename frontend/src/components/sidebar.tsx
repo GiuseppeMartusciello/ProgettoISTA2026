@@ -5,27 +5,10 @@ import styles from "../styles/sidebar.module.css";
 import { IconUsers, IconClipboardList } from "@tabler/icons-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useReservationCounts } from "../hooks/use-reservations";
+import { NavItem } from "../utils/navbar.utils";
 
-interface NavItemProps {
-  icon: React.ReactNode;
-  label: string;
-  active?: boolean;
-  badge?: string;
-  onClick?: () => void;
-}
 
-function NavItem({ icon, label, active, badge, onClick }: NavItemProps) {
-  return (
-    <button
-      onClick={onClick}
-      className={`${styles.navItem} ${active ? styles.active : ""}`}
-    >
-      {icon}
-      <span>{label}</span>
-      {badge && <span className="nav-badge">{badge}</span>}
-    </button>
-  );
-}
+
 
 const SideBar = () => {
   const location = useLocation();
@@ -79,7 +62,7 @@ const SideBar = () => {
               key={item.label}
               {...item}
               active={location.pathname === item.path}
-              onClick={() => navigate(item.path)}
+              onClick={() => navigate({ pathname: item.path, search: "", }, { replace: true })}
             />
           ))}
         </div>
