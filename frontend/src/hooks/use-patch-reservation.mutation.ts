@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { patchReservation } from "../api/doctor";
+import { patchReservation } from "../api/reservations";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
 

@@ -5,4 +5,5 @@ export interface PatientsResponse {
   total: number;
   page: number;
   limit: number;
+  hasMore: boolean;
 }

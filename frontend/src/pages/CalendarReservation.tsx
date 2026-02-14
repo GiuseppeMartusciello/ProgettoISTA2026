@@ -1,7 +1,7 @@
 import { Calendar, View, Views } from "react-big-calendar";
 import { EventWrapperWithPopover } from "../components/EventWrapperWIthPopover";
 
-import { Loader } from "@mantine/core";
+import { ActionIcon, Affix, Loader, Modal, Title } from "@mantine/core";
 import { useMemo, useCallback, useState, useEffect } from "react";
 
 import { ReservationCalendarEvent } from "../types/reservation-calendar-events";
@@ -14,6 +14,9 @@ import { CustomToolbar } from "../components/CustomToolBar";
 import { getRangeFromDateAndView, formats, localizer } from "../utils/calendar";
 import { Status } from "../types/status";
 import { useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
+import { useDisclosure } from "@mantine/hooks";
+import AddMedicalReservationForm from "../components/AddMedicalReservationForm";
 
 export default function CalendarReservations() {
   const [range, setRange] = useState<Range | null>(null);
@@ -31,6 +34,8 @@ export default function CalendarReservations() {
   const [selectedEvent, setSelectedEvent] = useState<
     ReservationCalendarEvent | undefined
   >();
+
+  const [isOpen, { toggle: handleModalToggle, close: handleModalClose }] = useDisclosure(false);
 
   const events: ReservationCalendarEvent[] = useMemo(() => {
     if (!reservationsData) {
@@ -191,6 +196,42 @@ export default function CalendarReservations() {
           return {};
         }}
       />
+
+      <Affix
+        position={{ bottom: 40, right: 40 }}
+        style={{ zIndex: 1000 }}
+        onClick={handleModalToggle}
+      >
+        <ActionIcon
+          color="blue"
+          radius="xl"
+          size={60}
+          style={{
+            backgroundColor: "var(--accent-primary)",
+            color: "white",
+          }}
+        >
+          <Plus size={30} />
+        </ActionIcon>
+      </Affix>
+
+      <Modal
+        opened={isOpen}
+        onClose={handleModalToggle}
+        size="auto"
+        radius="md"
+        overlayProps={{
+          backgroundOpacity: 0.55,
+          blur: 3,
+        }}
+        centered
+        withCloseButton={false}
+      >
+        <Title order={2} mb="md">
+          Inserisci nuova prenotazione
+        </Title>
+        <AddMedicalReservationForm handleClose={handleModalClose} />
+      </Modal>
     </div>
   );
 }
