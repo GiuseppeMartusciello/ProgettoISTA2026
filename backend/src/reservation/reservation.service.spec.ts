@@ -4,7 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Reservation } from './reservation.entity';
 import { Availability } from '../availability/availability.entity';
 import { Patient } from '../patient/patient.entity';
-import { Invite } from '../invite/invite.entity';
+
 import { VisitType } from './visit-type.entity';
 import { BadRequestException, ConflictException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ReservationStatus } from './types/reservation-status-enum';
@@ -67,12 +67,7 @@ describe('ReservationService', () => {
                         createQueryBuilder: jest.fn(() => createMockQueryBuilder()),
                     }
                 },
-                {
-                    provide: getRepositoryToken(Invite),
-                    useValue: {
-                        findOne: jest.fn(),
-                    }
-                },
+
             ],
         }).compile();
 
@@ -339,28 +334,7 @@ describe('ReservationService', () => {
             expect(result[0].reservations[0].patient.name).toBe('Mario');
         });
 
-        it('should handle invite patient data', async () => {
-            const today = new Date().toISOString();
-            const mockRes = [{
-                id: 'r1',
-                startDate: new Date(today),
-                endDate: new Date(today),
-                createdAt: new Date(),
-                status: ReservationStatus.PENDING,
-                visitType: { name: 'CONTROL' },
-                patient: { id: 'p1', user: null, invite: { name: 'Luigi', surname: 'Verdi' } } // Mock mapped invite
-            }];
 
-            // Manually inject invite since leftJoinAndMapOne is mocked but typeorm usually handles the mapping.
-            // In unit test we mock the result of getMany directly.
-
-            const qb = createMockQueryBuilder();
-            qb.getMany.mockResolvedValue(mockRes);
-            reservationRepo.createQueryBuilder.mockReturnValue(qb);
-
-            const result = await service.getReservations({ userId: 'd1' } as any, 'PENDING', new Date(), new Date());
-            expect(result[0].reservations[0].patient.name).toBe('Luigi');
-        });
     });
 
     describe('getReservationsByDay', () => {

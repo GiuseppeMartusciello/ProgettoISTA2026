@@ -50,7 +50,7 @@ describe('MedicalExaminationService', () => {
             reservationRepository.findOne.mockResolvedValue(mockReservation);
             medicalExaminationRepository.save.mockResolvedValue({ id: 'm1' });
 
-            const result = await service.addMedicalExamination({} as any, 'r1', { motivation: 'test', note: 'n' });
+            const result = await service.addMedicalExamination({} as any, 'r1', { motivation: 'test', note: 'n', date: new Date() });
             expect(result).toEqual({ id: 'm1' });
         });
 

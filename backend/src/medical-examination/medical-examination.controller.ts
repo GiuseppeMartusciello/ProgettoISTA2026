@@ -13,7 +13,7 @@ import { GetUser } from 'src/auth/get-user-decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { UserRoles } from 'src/common/enum/roles.enum';
 import { UserItem } from 'src/common/types/userItem';
-import { MedicalExaminationDTO } from 'src/invite/dto/medical-examination.dto';
+import { MedicalExaminationDTO } from './dto/medical-examination.dto';
 import { MedicalExaminationService } from './medical-examination.service';
 
 @Controller('medical-examination')
@@ -21,7 +21,7 @@ import { MedicalExaminationService } from './medical-examination.service';
 export class MedicalExaminationController {
   constructor(
     private readonly medicalExaminationService: MedicalExaminationService,
-  ) {}
+  ) { }
 
   @Post('/:reservationId')
   @Roles(UserRoles.DOCTOR)

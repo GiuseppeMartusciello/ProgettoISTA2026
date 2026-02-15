@@ -18,9 +18,10 @@ import { UserRoles } from 'src/common/enum/roles.enum';
 import { GetUser } from 'src/auth/get-user-decorator';
 import { UserItem } from 'src/common/types/userItem';
 import { User } from 'src/user/user.entity';
-import { MedicalExaminationDTO } from 'src/invite/dto/medical-examination.dto';
+
 import { Reservation } from 'src/reservation/reservation.entity';
 import { UpdatePatientDto } from 'src/auth/dto/update-patient.dto';
+import { CreateInviteDto } from './dto/create-invite.dto';
 
 @Controller('doctor')
 @UseGuards(RolesGuard)
@@ -68,5 +69,14 @@ export class DoctorController {
   @Roles(UserRoles.DOCTOR)
   deletePatient(@GetUser() user: UserItem, @Param('id') patientId: string) {
     return this.doctorService.deletePatient(user.id, patientId);
+  }
+
+  @Post('/invite')
+  @Roles(UserRoles.DOCTOR)
+  createInvite(
+    @GetUser() user: UserItem,
+    @Body() inviteDto: CreateInviteDto,
+  ) {
+    return this.doctorService.createInvite(user.id, inviteDto);
   }
 }

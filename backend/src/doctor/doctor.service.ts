@@ -1,9 +1,16 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
+import * as nodemailer from 'nodemailer';
+import * as crypto from 'crypto';
+import { CreateInviteDto } from './dto/create-invite.dto';
+import { UserRoles } from '../common/enum/roles.enum';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Doctor } from './doctor.entity';
 import { Repository } from 'typeorm';
@@ -11,7 +18,7 @@ import { Patient } from 'src/patient/patient.entity';
 import { User } from 'src/user/user.entity';
 import { UserItem } from 'src/common/types/userItem';
 import { PatientItem } from 'src/common/types/patientItem';
-import { Invite } from 'src/invite/invite.entity';
+
 import { DoctorItem, UserWithoutPassword } from 'src/common/types/doctorItem';
 import { PatientsResponse } from 'src/patient/types/patients-response.interface';
 import { take } from 'rxjs';
@@ -28,10 +35,7 @@ export class DoctorService {
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-
-    @InjectRepository(Invite)
-    private readonly inviteRepository: Repository<Invite>,
-  ) {}
+  ) { }
 
   async getDoctorByUserId(userId: string): Promise<DoctorItem> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
@@ -89,53 +93,18 @@ export class DoctorService {
       relations: ['user'],
     });
 
-    const invites = await this.inviteRepository.find({
-      where: { doctor: { userId: doctor.userId } },
-      relations: ['patient'],
-    });
-
-    // console.log('Lista di Pazienti: ', patients);
-
     const mapped = allPatients.map((patient): PatientItem => {
-      if (patient.user) {
-        const { password, ...safeUser } = patient.user;
+      const user = patient.user;
+      let safeUser: any = null;
 
-        return {
-          ...patient,
-          inviteId: undefined,
-          user: safeUser,
-        };
-      }
-      // console.log('Cerco per invito:');
-      const invite = invites.find((inv) => inv.patient.id === patient.id);
-
-      if (!invite) {
-        console.log("No invite found for patient", patient.id);
-      }
-      
-      //console.log(invite);
-
-      let userData: any = null;
-
-      if (invite) {
-        userData = {
-          name: invite.name,
-          surname: invite.surname,
-          email: invite.email,
-          cf: invite.cf,
-          birthDate: invite.birthDate,
-          gender: invite.gender,
-          phone: invite.phone,
-          address: invite.address,
-          city: invite.city,
-          cap: invite.cap,
-          province: invite.province,
-        };
+      if (user) {
+        const { password, ...rest } = user;
+        safeUser = rest;
       }
 
       return {
         id: patient.id,
-        user: userData,
+        user: safeUser,
         weight: patient.weight,
         height: patient.height,
         bloodType: patient.bloodType,
@@ -154,17 +123,17 @@ export class DoctorService {
     const filtered =
       search && search !== ''
         ? mapped.filter((p) => {
-            const user = p.user;
-            if (!user) return false;
+          const user = p.user;
+          if (!user) return false;
 
-            const searchLower = search.toLowerCase();
-            return (
-              user.name?.toLowerCase().includes(searchLower) ||
-              user.surname?.toLowerCase().includes(searchLower) ||
-              user.email?.toLowerCase().includes(searchLower) ||
-              user.cf?.toLowerCase().includes(searchLower)
-            );
-          })
+          const searchLower = search.toLowerCase();
+          return (
+            user.name?.toLowerCase().includes(searchLower) ||
+            user.surname?.toLowerCase().includes(searchLower) ||
+            user.email?.toLowerCase().includes(searchLower) ||
+            user.cf?.toLowerCase().includes(searchLower)
+          );
+        })
         : mapped;
 
     const startIndex = (page - 1) * Number(limit);
@@ -189,44 +158,15 @@ export class DoctorService {
 
     if (!patient) throw new BadRequestException("Patient doesn't exist.");
 
+    let safeUser: any = null;
     if (patient.user) {
-      const { password, ...safeUser } = patient.user;
-
-      return {
-        ...patient,
-        inviteId: undefined,
-        user: safeUser,
-      };
+      const { password, ...rest } = patient.user;
+      safeUser = rest;
     }
-
-    const invite = await this.inviteRepository.findOne({
-      where: { patient: { id: patientId } },
-    });
-
-    if (!invite) throw new BadRequestException("Patient doesn't exist.");
-
-    console.log(invite);
-
-    let userData: any = null;
-
-    userData = {
-      inviteId: invite.id,
-      name: invite.name,
-      surname: invite.surname,
-      email: invite.email,
-      cf: invite.cf,
-      birthDate: invite.birthDate,
-      gender: invite.gender,
-      phone: invite.phone,
-      address: invite.address,
-      city: invite.city,
-      cap: invite.cap,
-      province: invite.province,
-    };
 
     return {
       id: patient.id,
-      user: userData,
+      user: safeUser,
       weight: patient.weight,
       height: patient.height,
       bloodType: patient.bloodType,
@@ -326,37 +266,6 @@ export class DoctorService {
 
         await this.userRepository.save(user);
       }
-    } else {
-      // Se non ha un user ma ha un invite, aggiorna l'invite
-      const invite = await this.inviteRepository.findOne({
-        where: { patient: { id: patientId } },
-      });
-
-      if (invite) {
-        if (updatePatientDto.name !== undefined)
-          invite.name = updatePatientDto.name;
-        if (updatePatientDto.surname !== undefined)
-          invite.surname = updatePatientDto.surname;
-        if (updatePatientDto.email !== undefined)
-          invite.email = updatePatientDto.email;
-        if (updatePatientDto.cf !== undefined) invite.cf = updatePatientDto.cf;
-        if (updatePatientDto.birthDate !== undefined)
-          invite.birthDate = new Date(updatePatientDto.birthDate);
-        if (updatePatientDto.gender !== undefined)
-          invite.gender = updatePatientDto.gender;
-        if (updatePatientDto.phone !== undefined)
-          invite.phone = updatePatientDto.phone;
-        if (updatePatientDto.address !== undefined)
-          invite.address = updatePatientDto.address;
-        if (updatePatientDto.city !== undefined)
-          invite.city = updatePatientDto.city;
-        if (updatePatientDto.cap !== undefined)
-          invite.cap = updatePatientDto.cap;
-        if (updatePatientDto.province !== undefined)
-          invite.province = updatePatientDto.province;
-
-        await this.inviteRepository.save(invite);
-      }
     }
 
     // Ritorna il paziente aggiornato
@@ -387,18 +296,160 @@ export class DoctorService {
       );
     }
 
-    // Elimina gli inviti associati (se esistono)
-    const invites = await this.inviteRepository.find({
-      where: { patient: { id: patientId } },
-    });
 
-    if (invites.length > 0) {
-      await this.inviteRepository.remove(invites);
-    }
 
     // Elimina il paziente (cascade dovrebbe gestire le altre relazioni)
     await this.patientRepository.remove(patient);
 
     return { message: 'Paziente eliminato con successo' };
+  }
+
+  async createInvite(
+    userId: string,
+    createInviteDto: CreateInviteDto,
+  ): Promise<{ patientId: string }> {
+    // console.log('DEBUG: createInvite called in DoctorService');
+    const doctor = await this.getDoctorOrThrow(userId);
+
+    const { email, cf, phone } = createInviteDto;
+
+    // Check if user/patient exists
+    const found = await this.findUser(email, phone, cf);
+    // console.log('Found user/patient check: ', found);
+
+    if (found)
+      throw new BadRequestException('Tale paziente già esiste');
+
+    const patient = await this.createPatient(createInviteDto, doctor);
+    const password = this.generateRandomPassword();
+    const hashedPassword = await this.hashPassword(password);
+    const user = await this.createUserPatient(createInviteDto, hashedPassword);
+    this.assignPatientToUser(doctor.userId, patient.id, user); // using doctor.userId from existing getDoctorOrThrow
+    await this.sendPasswordEmail(email, password);
+
+    console.log('Patient created: ', patient);
+
+    return { patientId: patient.id };
+  }
+
+  // --- Helpers moved from InviteService ---
+
+  private async findUser(email: string, phone: string, cf: string) {
+    return this.userRepository
+      .createQueryBuilder('user')
+      .where('user.email = :email OR user.phone = :phone OR user.cf = :cf', {
+        email,
+        phone,
+        cf,
+      })
+      .getOne();
+  }
+
+  private async createPatient(
+    createInviteDto: CreateInviteDto,
+    doctor: Doctor,
+  ) {
+    const patient = this.patientRepository.create({
+      weight: createInviteDto.weight,
+      height: createInviteDto.height,
+      bloodType: createInviteDto.bloodType,
+      level: createInviteDto.level,
+      sport: createInviteDto.sport,
+      pathologies: createInviteDto.pathologies,
+      medications: createInviteDto.medications,
+      injuries: createInviteDto.injuries,
+      doctor: doctor,
+    });
+
+    return await this.patientRepository.save(patient);
+  }
+
+  private async hashPassword(password: string) {
+    try {
+      const salt = await bcrypt.genSalt();
+      const hashedPassword = await bcrypt.hash(password, salt);
+      return hashedPassword;
+    } catch (error) {
+      throw new Error('There is a problem to hash the password');
+    }
+  }
+
+  private async createUserPatient(
+    info: CreateInviteDto,
+    hashedPassword: string,
+  ): Promise<User> {
+    const exist = await this.findUser(info.email, info.phone, info.cf);
+
+    if (exist) throw new ConflictException('User already exist');
+
+    const user = this.userRepository.create({
+      email: info.email,
+      password: hashedPassword,
+      name: info.name,
+      surname: info.surname,
+      cf: info.cf,
+      birthDate: info.birthDate,
+      phone: info.phone,
+      gender: info.gender,
+      address: info.address,
+      city: info.city,
+      cap: info.cap,
+      province: info.province,
+      role: UserRoles.PATIENT,
+      mustChangePassword: true,
+    });
+
+    return this.userRepository.save(user);
+  }
+
+  private async assignPatientToUser(
+    doctorId: string,
+    patientId: string,
+    newUser: User,
+  ) {
+    const patient = await this.patientRepository.findOne({
+      where: { doctor: { userId: doctorId }, id: patientId },
+    });
+
+    if (!patient) {
+      throw new NotFoundException('Patient not found');
+    }
+
+    patient.user = newUser;
+    await this.patientRepository.save(patient);
+  }
+
+  private generateRandomPassword(): string {
+    return crypto.randomBytes(4).toString('hex');
+  }
+
+  private async sendPasswordEmail(email: string, password: string) {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: '"SymbioCare" <noreply@symbiocare.com>',
+      to: email,
+      subject: 'Welcome to SymbioCare - Your Account Details',
+      text: `Hello,\n\nYour account has been created.\n\nUsername: ${email}\nPassword: ${password}\n\nPlease change your password after logging in.\n\nBest regards,\nSymbioCare Team`,
+      html: `<p>Hello,</p><p>Your account has been created.</p><p><strong>Username:</strong> ${email}<br><strong>Password:</strong> ${password}</p><p>Please change your password after logging in.</p><p>Best regards,<br>SymbioCare Team</p>`,
+    };
+
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log(`Email sent to ${email}`);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[DEV] Generated password for ${email}: ${password}`);
+      }
+    }
   }
 }

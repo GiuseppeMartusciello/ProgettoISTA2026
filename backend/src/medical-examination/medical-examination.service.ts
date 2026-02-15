@@ -4,10 +4,10 @@ import { MedicalExamination } from './medical-examination.entity';
 import { In, Repository } from 'typeorm';
 import { UserItem } from 'src/common/types/userItem';
 import { Reservation } from 'src/reservation/reservation.entity';
-import { MedicalExaminationDTO } from 'src/invite/dto/medical-examination.dto';
 import { Doctor } from 'src/doctor/doctor.entity';
 import { MedicalExaminationResponse } from './types/medical-examination-response.interface';
 import { MedicalExaminationsResponse } from './types/medical-examinations-response.interface';
+import { MedicalExaminationDTO } from './dto/medical-examination.dto';
 
 @Injectable()
 export class MedicalExaminationService {

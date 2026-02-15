@@ -17,12 +17,12 @@ import { plainToInstance } from 'class-transformer';
 import {
   DoctorResponseDto,
   DoctorUserDto,
-} from 'src/invite/dto/doctor-response.dto';
+} from 'src/doctor/dto/doctor-response.dto';
 
 @Controller('patient')
 @UseGuards(RolesGuard)
 export class PatientController {
-  constructor(private patientService: PatientService) {}
+  constructor(private patientService: PatientService) { }
 
   @Get('/doctor')
   @Roles(UserRoles.PATIENT)

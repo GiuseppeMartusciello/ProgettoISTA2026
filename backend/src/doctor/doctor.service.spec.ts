@@ -4,7 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Doctor } from './doctor.entity';
 import { Patient } from '../patient/patient.entity';
 import { User } from '../user/user.entity';
-import { Invite } from '../invite/invite.entity';
+
 import { BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 
 const mockDoctorRepository = {
@@ -23,12 +23,7 @@ const mockUserRepository = {
     save: jest.fn(),
 };
 
-const mockInviteRepository = {
-    find: jest.fn(),
-    findOne: jest.fn(),
-    save: jest.fn(),
-    remove: jest.fn(),
-};
+
 
 describe('DoctorService', () => {
     let service: DoctorService;
@@ -40,7 +35,7 @@ describe('DoctorService', () => {
                 { provide: getRepositoryToken(Doctor), useValue: mockDoctorRepository },
                 { provide: getRepositoryToken(Patient), useValue: mockPatientRepository },
                 { provide: getRepositoryToken(User), useValue: mockUserRepository },
-                { provide: getRepositoryToken(Invite), useValue: mockInviteRepository },
+
             ],
         }).compile();
 
@@ -69,30 +64,13 @@ describe('DoctorService', () => {
     });
 
     describe('getPatients', () => {
-        it('should return paginated patients (merging invites)', async () => {
-            mockUserRepository.findOne.mockResolvedValue({ id: 'u1' }); // for getDoctorOrThrow (via getDoctorByUserId internal call? No, getDoctorOrThrow uses repository directly)
-            // Wait, getDoctorOrThrow uses doctorRepository.findOne
+        it('should return paginated patients', async () => {
+            mockUserRepository.findOne.mockResolvedValue({ id: 'u1' });
             mockDoctorRepository.findOne.mockResolvedValue({ userId: 'u1' });
 
             mockPatientRepository.find.mockResolvedValue([
-                { id: 'p1', user: { id: 'pu1', name: 'Mario', password: 'xx' } }
-            ]);
-            mockInviteRepository.find.mockResolvedValue([
-                { patient: { id: 'p2' }, name: 'Luigi', email: 'l@test.com' } // Invites linked to patient p2
-            ]);
-            // But wait, the logic maps patients. If a patient is found in "allPatients", it maps it.
-            // If it has NO user, it looks for invite.
-
-            // Let's verify logic:
-            // filtered = mapped... 
-            // mapped iterates allPatients.
-            // if patient.user -> map user
-            // else -> find invite matching patient.id
-
-            // So I need a patient in allPatients that corresponds to the invite.
-            mockPatientRepository.find.mockResolvedValue([
-                { id: 'p1', user: { id: 'pu1', name: 'Mario' } },
-                { id: 'p2', user: null } // Patient from invite (no user yet)
+                { id: 'p1', user: { id: 'pu1', name: 'Mario', password: 'xx' } },
+                { id: 'p2', user: { id: 'pu2', name: 'Luigi' } }
             ]);
 
             const result = await service.getPatients('u1', 1, 10, '');
@@ -139,14 +117,12 @@ describe('DoctorService', () => {
     });
 
     describe('deletePatient', () => {
-        it('should delete patient and invites', async () => {
+        it('should delete patient', async () => {
             mockDoctorRepository.findOne.mockResolvedValue({ userId: 'u1' });
             mockPatientRepository.findOne.mockResolvedValue({ id: 'p1', doctor: { userId: 'u1' } });
-            mockInviteRepository.find.mockResolvedValue([{ id: 'inv1' }]);
 
             await service.deletePatient('u1', 'p1');
 
-            expect(mockInviteRepository.remove).toHaveBeenCalled();
             expect(mockPatientRepository.remove).toHaveBeenCalled();
         });
     });
