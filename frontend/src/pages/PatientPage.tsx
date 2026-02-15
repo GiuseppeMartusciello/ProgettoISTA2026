@@ -5,12 +5,10 @@ import {
   Button,
   Divider,
   Loader,
-  Modal,
   Paper,
-  Space,
   Title,
 } from "@mantine/core";
-import { IconPhone, IconQrcode, IconUser } from "@tabler/icons-react";
+import { IconPhone, IconUser } from "@tabler/icons-react";
 import styles from "../styles/PatientPage.module.css";
 
 import InfoCard from "../components/InfoCard";
@@ -31,16 +29,12 @@ import {
   Stethoscope,
   VenusAndMars,
 } from "lucide-react";
-import { useDisclosure } from "@mantine/hooks";
-import QRCode from "react-qr-code";
 import BackButton from "../components/BackButton";
 import MedicalExaminations from "../components/MedicalExaminations";
 
 export default function PatientPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
-  const [opened, handler] = useDisclosure(false);
 
   const { data: patient, isLoading, isError } = usePatient(id || "");
 
