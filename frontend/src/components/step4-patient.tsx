@@ -22,8 +22,8 @@ export default function Step4({ form }: StepProps) {
         mt="sm"
         data={[]}
         placeholder="Inserisci le patologie del paziente"
-        {...form.getInputProps("patologies")}
-        error={form.errors.patologies}
+        {...form.getInputProps("pathologies")}
+        error={form.errors.pathologies}
       />
 
       <TagsInput

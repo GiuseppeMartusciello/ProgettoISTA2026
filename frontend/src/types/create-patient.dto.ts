@@ -15,7 +15,7 @@ export interface CreatePatientDto {
   bloodType: string;
   level: string;
   sport: string;
-  patologies: string[];
+  pathologies: string[];
   medications: string[];
   injuries: string[];
 }
