@@ -9,9 +9,7 @@ export interface PatientItem {
   medications: string[];
   injuries: string[];
 
-  // doctor: Doctor; // Assicurati che esista un'interfaccia Doctor
   user: {
-    inviteId?: string;
     id: string;
     name: string;
     surname: string;

@@ -16,7 +16,7 @@ export async function fetchDoctor() {
 }
 
 export async function addPatient(patient: CreatePatientDto) {
-  const res = await api.post<any>("invite/create", patient, {
+  const res = await api.post<any>("doctor/invite", patient, {
     withCredentials: true,
   });
 
