@@ -130,5 +130,5 @@ export async function getMedicalExaminations(
   console.log("🔍 Tipo di parsed:", typeof parsed);
   console.log("🔍 parsed.pagination esiste?", !!parsed.pagination);
 
-  return parsed; // ✅ restituisci solo res.data!
+  return parsed;
 }

@@ -324,7 +324,7 @@ export class DoctorService {
     const password = this.generateRandomPassword();
     const hashedPassword = await this.hashPassword(password);
     const user = await this.createUserPatient(createInviteDto, hashedPassword);
-    this.assignPatientToUser(doctor.userId, patient.id, user); // using doctor.userId from existing getDoctorOrThrow
+    await this.assignPatientToUser(doctor.userId, patient.id, user); // using doctor.userId from existing getDoctorOrThrow
     await this.sendPasswordEmail(email, password);
 
     console.log('Patient created: ', patient);
@@ -437,9 +437,9 @@ export class DoctorService {
     const mailOptions = {
       from: '"SymbioCare" <noreply@symbiocare.com>',
       to: email,
-      subject: 'Welcome to SymbioCare - Your Account Details',
-      text: `Hello,\n\nYour account has been created.\n\nUsername: ${email}\nPassword: ${password}\n\nPlease change your password after logging in.\n\nBest regards,\nSymbioCare Team`,
-      html: `<p>Hello,</p><p>Your account has been created.</p><p><strong>Username:</strong> ${email}<br><strong>Password:</strong> ${password}</p><p>Please change your password after logging in.</p><p>Best regards,<br>SymbioCare Team</p>`,
+      subject: 'Benvenuto in SymbioCare - Le tue credenziali',
+      text: `Ciao,\n\nIl tuo account è stato creato con successo.\n\nUsername: ${email}\nPassword: ${password}\n\nPer motivi di sicurezza, ti invitiamo a cambiare la password dopo il primo accesso.\n\nCordiali saluti,\nIl Team di SymbioCare`,
+      html: `<p>Ciao,</p><p>Il tuo account è stato creato con successo.</p><p><strong>Username:</strong> ${email}<br><strong>Password:</strong> ${password}</p><p>Per motivi di sicurezza, ti invitiamo a cambiare la password dopo il primo accesso.</p><p>Cordiali saluti,<br>Il Team di SymbioCare</p>`,
     };
 
     try {
