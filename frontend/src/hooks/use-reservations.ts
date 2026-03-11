@@ -3,7 +3,7 @@ import {
   fetchReservations,
   fetchHowManyReservations,
   fetchReservationsTable,
-} from "../api/doctor";
+} from "../api/reservations";
 import { GroupedReservations } from "../types/reservation";
 import { ReservationItem } from "../types/reservation-item";
 

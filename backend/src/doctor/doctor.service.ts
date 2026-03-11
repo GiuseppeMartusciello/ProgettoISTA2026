@@ -108,6 +108,11 @@ export class DoctorService {
       }
       // console.log('Cerco per invito:');
       const invite = invites.find((inv) => inv.patient.id === patient.id);
+
+      if (!invite) {
+        console.log("No invite found for patient", patient.id);
+      }
+      
       //console.log(invite);
 
       let userData: any = null;
@@ -141,7 +146,11 @@ export class DoctorService {
         injuries: patient.injuries,
       };
     });
-    console.log('Search:', `{ ${search} }`);
+    // console.log('Search:', `{ ${search} }`);
+
+
+
+
     const filtered =
       search && search !== ''
         ? mapped.filter((p) => {
@@ -160,22 +169,15 @@ export class DoctorService {
 
     const startIndex = (page - 1) * Number(limit);
     const endIndex = startIndex + Number(limit);
-    const paginatedData = filtered.slice(startIndex, endIndex);
 
-    console.log('StartIndex: ', startIndex);
-    console.log('EndIndex: ', endIndex);
-    console.log('Paginates data: ', paginatedData);
-    console.log('Filtered: ', filtered[0]);
-    console.log('Filtered length: ', filtered.length);
-    console.log('Mapped: ', mapped[0]);
-    console.log('Mapped.lentgh: ', mapped.length);
+    const valid = filtered.filter((p) => p.user != null);
 
-    // 5. Il total deve essere basato sui pazienti FILTRATI
     return {
-      data: filtered.slice(startIndex, endIndex),
-      total: filtered.length, // ← Questo è il fix principale!
+      data: valid.slice(startIndex, endIndex),
+      total: valid.length, // ← Questo è il fix principale!
       page,
       limit,
+      hasMore: endIndex < filtered.length,
     };
   }
 

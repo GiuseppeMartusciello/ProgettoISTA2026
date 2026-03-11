@@ -7,13 +7,14 @@ export interface PatientsResponse {
   total: number;
   page: number;
   limit: number;
+  hasMore: boolean;
 }
 export async function fetchPatients(
   page: number,
   limit: number,
   search: string
 ) {
-  console.log("Sono dentro fetchpatients: ", page, limit, search);
+  // console.log("Sono dentro fetchpatients: ", page, limit, search);
   const res = await api.get<PatientsResponse>(
     `doctor/patients?page=${page}&limit=${limit}&search=${search}`,
     {
