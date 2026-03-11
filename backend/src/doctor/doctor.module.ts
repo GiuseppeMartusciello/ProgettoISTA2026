@@ -6,7 +6,6 @@ import { MedicalExamination } from 'src/medical-examination/medical-examination.
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Doctor } from './doctor.entity';
 import { User } from 'src/user/user.entity';
-import { Invite } from 'src/invite/invite.entity';
 
 @Module({
   imports: [
@@ -15,11 +14,10 @@ import { Invite } from 'src/invite/invite.entity';
       MedicalExamination,
       Doctor,
       User,
-      Invite,
     ]),
   ],
   controllers: [DoctorController],
   providers: [DoctorService],
   exports: [DoctorService],
 })
-export class DoctorModule {}
+export class DoctorModule { }

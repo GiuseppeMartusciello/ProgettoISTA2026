@@ -16,7 +16,7 @@ export async function fetchDoctor() {
 }
 
 export async function addPatient(patient: CreatePatientDto) {
-  const res = await api.post<any>("invite/create", patient, {
+  const res = await api.post<any>("doctor/invite", patient, {
     withCredentials: true,
   });
 
@@ -130,5 +130,5 @@ export async function getMedicalExaminations(
   console.log("🔍 Tipo di parsed:", typeof parsed);
   console.log("🔍 parsed.pagination esiste?", !!parsed.pagination);
 
-  return parsed; // ✅ restituisci solo res.data!
+  return parsed;
 }

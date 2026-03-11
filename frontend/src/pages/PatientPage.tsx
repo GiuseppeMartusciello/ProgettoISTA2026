@@ -5,12 +5,10 @@ import {
   Button,
   Divider,
   Loader,
-  Modal,
   Paper,
-  Space,
   Title,
 } from "@mantine/core";
-import { IconPhone, IconQrcode, IconUser } from "@tabler/icons-react";
+import { IconPhone, IconUser } from "@tabler/icons-react";
 import styles from "../styles/PatientPage.module.css";
 
 import InfoCard from "../components/InfoCard";
@@ -31,16 +29,12 @@ import {
   Stethoscope,
   VenusAndMars,
 } from "lucide-react";
-import { useDisclosure } from "@mantine/hooks";
-import QRCode from "react-qr-code";
 import BackButton from "../components/BackButton";
 import MedicalExaminations from "../components/MedicalExaminations";
 
 export default function PatientPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
-  const [opened, handler] = useDisclosure(false);
 
   const { data: patient, isLoading, isError } = usePatient(id || "");
 
@@ -109,20 +103,7 @@ export default function PatientPage() {
             </Title>
 
             <div className={styles.buttonSection}>
-              {patient.user.inviteId ? (
-                <>
-                  <Button
-                    leftSection={<IconQrcode size={16} />}
-                    onClick={handler.open}
-                    mt="xs"
-                    className="button"
-                  >
-                    QR di invito
-                  </Button>
-
-                  <Space w={"sm"} />
-                </>
-              ) : (
+             
                 <Button
                   leftSection={<CirclePlus size={16} />}
                   onClick={() => navigate(`/add-examination/${patient.id}`)}
@@ -131,7 +112,7 @@ export default function PatientPage() {
                 >
                   Aggiungi visita
                 </Button>
-              )}
+              
             </div>
           </div>
         </div>
@@ -219,58 +200,7 @@ export default function PatientPage() {
             />
           )}
         </div>
-        <Modal
-          opened={opened}
-          onClose={handler.close}
-          title={null} // titolo custom dentro il body
-          size="auto"
-          radius="md"
-          overlayProps={{
-            backgroundOpacity: 0.55,
-            blur: 3,
-          }}
-          centered
-        >
-          <div style={{ textAlign: "center", padding: "1.5rem" }}>
-            <h2
-              style={{
-                marginBottom: "0.5rem",
-                fontSize: "1.5rem",
-                color: "var(--text-primary)",
-              }}
-            >
-              QR Code per la registrazione
-            </h2>
-            <p
-              style={{ color: "var(--text-secondary)", marginBottom: "1.5rem" }}
-            >
-              Scansiona questo codice per completare la registrazione del
-              paziente.
-            </p>
 
-            <div
-              style={{
-                padding: "1rem",
-                backgroundColor: "#f8f9fa",
-                borderRadius: "8px",
-                display: "inline-block",
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-              }}
-            >
-              <QRCode
-                value={String(patient.user.inviteId)}
-                level="L"
-                size={300}
-              />
-            </div>
-
-            <div style={{ marginTop: "2rem" }}>
-              <button onClick={handler.close} className="button">
-                Chiudi
-              </button>
-            </div>
-          </div>
-        </Modal>
         <Title order={3} mt="xl" mb="sm">
           Altro{" "}
         </Title>
