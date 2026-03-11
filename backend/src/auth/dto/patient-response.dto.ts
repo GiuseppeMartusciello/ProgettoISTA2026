@@ -7,7 +7,7 @@ export class PatientResponseDto {
   bloodType: string;
   level: PatientLevel;
   sport: string;
-  patologies: string[];
+  pathologies: string[];
   medications: string[];
   injuries: string[];
 }

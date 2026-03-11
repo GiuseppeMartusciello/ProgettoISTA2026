@@ -49,7 +49,7 @@ export default function AddPatientPage() {
       case 3:
         return {
           bloodType: form.values.bloodType,
-          patologies: form.values.patologies,
+          pathologies: form.values.pathologies,
           medications: form.values.medications,
           injuries: form.values.injuries,
         };
@@ -132,35 +132,11 @@ export default function AddPatientPage() {
       bloodType: "",
       level: "INTERMEDIATE",
       sport: "",
-      patologies: [],
+      pathologies: [],
       medications: [],
       injuries: [],
     },
   });
-
-  // const form = useForm<FormValues>({
-  //   initialValues: {
-  //     name: "Luca",
-  //     surname: "Rossi",
-  //     email: "luca.rossi@example.com",
-  //     cf: "RSSLCU85T10H501Z",
-  //     birthDate: new Date("1990-04-15"),
-  //     gender: "Uomo",
-  //     phone: "3451234567",
-  //     address: "Via Garibaldi 10",
-  //     city: "Milano",
-  //     cap: "20100",
-  //     province: "MI",
-  //     weight: 75,
-  //     height: 180,
-  //     bloodType: "A+",
-  //     level: "INTERMEDIATE",
-  //     sport: "Corsa",
-  //     patologies: ["Asma"],
-  //     medications: ["Ventolin"],
-  //     injuries: ["Distorsione caviglia - 2023"],
-  //   },
-  // });
 
   return (
     <div className={styles.container}>

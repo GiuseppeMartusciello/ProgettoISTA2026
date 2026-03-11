@@ -56,13 +56,13 @@ export class AuthController {
     res
       .cookie('jwt', accessToken, {
         httpOnly: true,
-        secure: true, // ✅ false in sviluppo (HTTP)
-        sameSite: 'none', // ✅ 'none' per cross-origin
+        secure: true,
+        sameSite: 'none',
       })
       .cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: true, // ✅ false in sviluppo (HTTP)
-        sameSite: 'none', // ✅ 'none' per cross-origin
+        secure: true,
+        sameSite: 'none',
       });
 
     return user;
@@ -76,7 +76,7 @@ export class AuthController {
     @Body() authCredentialsDto: AuthCredentialsDto,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<{user: UserItem ; requires2fa: boolean} | { requires2fa: boolean; challengeId: string }> {
+  ): Promise<{ user: UserItem; requires2fa: boolean } | { requires2fa: boolean; challengeId: string }> {
     const result = await this.authService.signIn(
       authCredentialsDto,
       this.getDeviceInfo(req),
@@ -93,16 +93,16 @@ export class AuthController {
     res
       .cookie('jwt', accessToken, {
         httpOnly: true,
-        secure: true, // ✅ false in sviluppo (HTTP)
-        sameSite: 'none', // ✅ 'none' per cross-origin
+        secure: true,
+        sameSite: 'none',
       })
       .cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: true, // ✅ false in sviluppo (HTTP)
-        sameSite: 'none', // ✅ 'none' per cross-origin
+        secure: true,
+        sameSite: 'none',
       });
 
-    return {user, requires2fa:false};
+    return { user, requires2fa: false };
   }
 
   @Post('/logout')
@@ -119,7 +119,7 @@ export class AuthController {
 
     await this.authService.logout(refreshToken);
 
-    return res.status(200).send({ message: 'Logout success' }); // ✅ chiude la response!
+    return res.status(200).send({ message: 'Logout success' });
   }
 
   @Post('/2fa/setup')
@@ -158,13 +158,13 @@ export class AuthController {
     res
       .cookie('jwt', result.accessToken, {
         httpOnly: true,
-        secure: true, // ✅ false in sviluppo (HTTP)
-        sameSite: 'none', // ✅ 'none' per cross-origin
+        secure: true,
+        sameSite: 'none',
       })
       .cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
-        secure: true, // ✅ false in sviluppo (HTTP)
-        sameSite: 'none', // ✅ 'none' per cross-origin
+        secure: true,
+        sameSite: 'none',
       });
 
     return result.user;

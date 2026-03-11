@@ -42,7 +42,7 @@ export type FormValues = {
   bloodType: string;
   sport: string;
   level: string;
-  patologies: string[];
+  pathologies: string[];
   medications: string[];
   injuries: string[];
 };
@@ -64,7 +64,7 @@ export interface RegisterInfo {
   bloodType: string;
   sport: string;
   level: string;
-  patologies: string[];
+  pathologies: string[];
   medications: string[];
   injuries: string[];
 }

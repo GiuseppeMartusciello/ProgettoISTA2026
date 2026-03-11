@@ -9,11 +9,11 @@ export const step4Schema = z.object({
       { message: "Gruppo sanguigno non valido" }
     ),
 
-  patologies: z.array(z.string().min(1, "Inserisci una patologia valida")),
+  pathologies: z.array(z.string().min(1, "Inserisci una patologia valida")).default([]),
 
-  medications: z.array(z.string().min(1, "Inserisci un farmaco valido")),
+  medications: z.array(z.string().min(1, "Inserisci un farmaco valido")).default([]),
 
-  injuries: z.array(z.string().min(1, "Inserisci un infortunio valido")),
+  injuries: z.array(z.string().min(1, "Inserisci un infortunio valido")).default([]),
 });
 
 export type Step4SchemaType = z.infer<typeof step4Schema>;

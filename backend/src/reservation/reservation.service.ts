@@ -27,7 +27,6 @@ import {
 import { UserItem } from 'src/common/types/userItem';
 import { ReservationResponse } from './dto/reservation-response.dto';
 import { MedicalExamination } from 'src/medical-examination/medical-examination.entity';
-import { Invite } from 'src/invite/invite.entity';
 
 @Injectable()
 export class ReservationService {
@@ -43,10 +42,7 @@ export class ReservationService {
 
     @InjectRepository(Patient)
     private readonly patientRepository: Repository<Patient>,
-
-    @InjectRepository(Invite)
-    private readonly inviteRepository: Repository<Invite>,
-  ) {}
+  ) { }
 
   async isFirstVisit(patient: Patient) {
     const reservation = await this.reservationRepository.findOne({
@@ -232,12 +228,6 @@ export class ReservationService {
       .createQueryBuilder('r')
       .leftJoinAndSelect('r.patient', 'patient')
       .leftJoinAndSelect('patient.user', 'user')
-      .leftJoinAndMapOne(
-        'patient.invite',
-        Invite,
-        'invite',
-        'invite."patientId" = patient.id',
-      )
       .leftJoinAndSelect('r.visitType', 'visitType')
       .where('r.doctorUserId = :doctor', { doctor: doctor.userId });
 
@@ -276,8 +266,6 @@ export class ReservationService {
       }
 
       // Get invite data if user is not registered
-      const invite = (reservation.patient as any)?.invite;
-      
       const reservationDTO: ReservationsDTO = {
         id: reservation.id,
         startTime: reservation.startDate.toISOString(),
@@ -286,11 +274,11 @@ export class ReservationService {
         status: reservation.status,
         visitType: reservation.visitType.name,
         patient: {
-          name: reservation.patient?.user?.name || invite?.name,
-          surname: reservation.patient?.user?.surname || invite?.surname,
+          name: reservation.patient?.user?.name || '',
+          surname: reservation.patient?.user?.surname || '',
           id: reservation.patient.id,
-          gender: reservation.patient?.user?.gender || invite?.gender,
-          cf: reservation.patient?.user?.cf || invite?.cf,
+          gender: reservation.patient?.user?.gender || '',
+          cf: reservation.patient?.user?.cf || '',
         },
       };
 
@@ -342,7 +330,7 @@ export class ReservationService {
       await this.checkExistOtherVisits(doctor, patient);
 
     await this.checkVisitDuration(visitTypeEntity.durationMinutes, start, end);
-  
+
     await this.ensureSlotNotBooked(doctor, start);
 
     await this.findValidAvailabilityOrThrow(doctor, start, end);
@@ -360,45 +348,45 @@ export class ReservationService {
     return this.reservationRepository.save(reservation);
   }
 
-    async createReservationByPatient(
-      doctor: Doctor,
-      patient: Patient,
-      dto: CreateReservationDto,
-    ) {
-      return this.createReservationCore({
-        doctor,
-        patient,
-        startTime: dto.startTime,
-        endTime: dto.endTime,
-        visitType: dto.visitType,
-        status: ReservationStatus.PENDING,
-      });
-    }
+  async createReservationByPatient(
+    doctor: Doctor,
+    patient: Patient,
+    dto: CreateReservationDto,
+  ) {
+    return this.createReservationCore({
+      doctor,
+      patient,
+      startTime: dto.startTime,
+      endTime: dto.endTime,
+      visitType: dto.visitType,
+      status: ReservationStatus.PENDING,
+    });
+  }
 
-    async createReservationByDoctor(
+  async createReservationByDoctor(
     doctor: Doctor,
     dto: CreateDoctorReservationDto,
-    ) {
-      const patient = await this.patientRepository.findOne({
-        where: { id: dto.patientId, doctor: { userId: doctor.userId } },
-        relations: ['doctor'],
-      });
+  ) {
+    const patient = await this.patientRepository.findOne({
+      where: { id: dto.patientId, doctor: { userId: doctor.userId } },
+      relations: ['doctor'],
+    });
 
-      if (!patient) {
-        throw new NotFoundException(
-          'Patient not found or does not belong to this doctor',
-        );
-      }
-
-      return this.createReservationCore({
-        doctor,
-        patient,
-        startTime: dto.startTime,
-        endTime: dto.endTime,
-        visitType: dto.visitType,
-        status: ReservationStatus.CONFIRMED,
-      });
+    if (!patient) {
+      throw new NotFoundException(
+        'Patient not found or does not belong to this doctor',
+      );
     }
+
+    return this.createReservationCore({
+      doctor,
+      patient,
+      startTime: dto.startTime,
+      endTime: dto.endTime,
+      visitType: dto.visitType,
+      status: ReservationStatus.CONFIRMED,
+    });
+  }
 
 
 

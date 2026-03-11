@@ -46,6 +46,9 @@ export class User {
   province: string;
 
   @Column({ default: false })
+  mustChangePassword: boolean;
+
+  @Column({ default: false })
   twoFactorEnabled: boolean;
 
   @Column({ type: 'varchar', nullable: true })

@@ -6,7 +6,7 @@ import { PatientModule } from './patient/patient.module';
 import { DoctorModule } from './doctor/doctor.module';
 import { MedicalExaminationModule } from './medical-examination/medical-examination.module';
 import { UserModule } from './user/user.module';
-import { InviteModule } from './invite/invite.module';
+
 import { AvailabilityModule } from './availability/availability.module';
 import { ReservationModule } from './reservation/reservation.module';
 import { AuthMiddleware } from './auth/middleware/auth.middleware';
@@ -44,7 +44,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     DoctorModule,
     MedicalExaminationModule,
     UserModule,
-    InviteModule,
+
     AvailabilityModule,
     ReservationModule,
     MedicalDetectionModule,
@@ -63,8 +63,7 @@ export class AppModule {
         { path: 'auth/signup', method: RequestMethod.POST },
         { path: 'auth/signin', method: RequestMethod.POST },
         { path: 'auth/2fa/verify', method: RequestMethod.POST },
-        { path: 'invite/:id', method: RequestMethod.GET },
-        { path: 'invite/:id/accept', method: RequestMethod.POST },
+
       )
       .forRoutes('*');
   }
