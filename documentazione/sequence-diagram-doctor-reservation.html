@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sequence Diagram — Creazione Prenotazione da parte del Medico</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #f8fafd;
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      padding: 40px 20px 60px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 32px;
+    }
+    .subtitle code {
+      background: #e8f0fe;
+      color: #1e3a5f;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    #diagram {
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+    }
+    .mermaid { font-size: 13px; }
+
+    /* legend */
+    .legend {
+      margin: 36px auto 0;
+      max-width: 860px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 20px 24px;
+    }
+    .legend h2 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .legend table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+    .legend th {
+      text-align: left;
+      padding: 6px 12px;
+      background: #f1f5f9;
+      color: #374151;
+      font-weight: 600;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .legend td {
+      padding: 7px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: top;
+      color: #374151;
+    }
+    .legend tr:last-child td { border-bottom: none; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-green  { background: #dcfce7; color: #166534; }
+    .badge-red    { background: #fee2e2; color: #991b1b; }
+    .badge-blue   { background: #dbeafe; color: #1e40af; }
+    .badge-yellow { background: #fef9c3; color: #713f12; }
+  </style>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      sequence: {
+        actorMargin: 90,
+        width: 175,
+        height: 50,
+        boxMargin: 10,
+        boxTextMargin: 6,
+        noteMargin: 10,
+        messageMargin: 42,
+        mirrorActors: true,
+        useMaxWidth: false,
+        diagramMarginX: 50,
+        diagramMarginY: 20
+      },
+      themeVariables: {
+        primaryColor: '#1e3a5f',
+        primaryTextColor: '#ffffff',
+        primaryBorderColor: '#0f2540',
+        lineColor: '#334e68',
+        secondaryColor: '#e8f0fe',
+        tertiaryColor: '#fff8e1',
+        activationBorderColor: '#1e3a5f',
+        activationBkgColor: '#dce8f8',
+        altSectionBkgColor: '#fef9e7',
+        noteBkgColor: '#fff9c4',
+        noteBorderColor: '#f9a825',
+        noteTextColor: '#1a1a1a',
+        loopTextColor: '#1a1a1a',
+        labelBoxBkgColor: '#e3f2fd',
+        labelBoxBorderColor: '#1565c0',
+        labelTextColor: '#0d47a1',
+        sequenceNumberColor: '#ffffff',
+        fontFamily: 'Segoe UI, Helvetica Neue, Arial, sans-serif',
+        fontSize: '13px'
+      }
+    });
+  </script>
+</head>
+<body>
+  <h1>Sequence Diagram — Creazione Prenotazione da parte del Medico</h1>
+  
+
+  <div id="diagram">
+    <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Medico
+    participant CAL as CalendarReservation&lt;br/&gt;(React)
+    participant FORM as AddMedicalReservationForm&lt;br/&gt;(React)
+    participant BE as Backend&lt;br/&gt;NestJS
+    participant DB as Database
+
+    %% ─── APERTURA MODAL ──────────────────────────────────────────────────────
+    Medico->>CAL: Clicca FAB «+» (ActionIcon bottom-right)
+    Note over CAL: handleModalToggle() → isOpen = true
+    CAL->>FORM: Apre Modal con AddMedicalReservationForm
+
+    %% ─── SELEZIONE PAZIENTE → isFirstVisit ───────────────────────────────────
+    Medico->>FORM: Seleziona un paziente (PatientSelect)
+    Note over FORM: setPatient(patient)<br/>useIsFirstVisit(patient.id) abilitato (enabled: !!patientId)
+    FORM->>BE: GET /reservations/isFirstVisit?patientId=XXX
+    Note over BE: @Roles(PATIENT, DOCTOR, ADMIN)<br/>user.doctor presente → ramo medico<br/>Controlla patientId obbligatorio
+    BE->>DB: patientRepository.findOne({<br/>  where: { id: patientId, doctor: { userId: doctor.userId } },<br/>  relations: ['doctor']<br/>})
+    DB-->>BE: Patient | null
+
+    alt Paziente non trovato o non appartiene al medico
+        BE-->>FORM: HTTP 404 NotFoundException<br/>«Patient not found or does not belong to this doctor»
+        Note over FORM: React Query mostra errore
+    else Paziente trovato
+        BE->>DB: reservationRepository.findOne({ where: { patient } })
+        DB-->>BE: Reservation | null
+        alt Nessuna prenotazione esistente
+            BE-->>FORM: HTTP 200 { isFirstVisit: true }
+        else Prenotazione già esistente
+            BE-->>FORM: HTTP 200 { isFirstVisit: false }
+        end
+        Note over FORM: useEffect([firstVisitData]):<br/>isFirstVisit=true → setVisitType(FIRST_VISIT)<br/>isFirstVisit=false → setVisitType(CONTROL)<br/>Radio «Controllo» disabilitato se prima visita
+    end
+
+    %% ─── SELEZIONE DATA → fetchSlots ─────────────────────────────────────────
+    Medico->>FORM: Seleziona una data (TextInput type=date)
+    Note over FORM: setSelectedDate(date)<br/>useSlots(date, visitType) abilitato (enabled: !!date && !!visitType)
+    FORM->>BE: GET /reservations/slots?date=YYYY-MM-DD&amp;visitType=FIRST_VISIT|CONTROL
+    Note over BE: @Roles(PATIENT, DOCTOR, ADMIN)<br/>user.doctor → doctor = user.doctor<br/>moment.tz(date, 'YYYY-MM-DD', 'Europe/Rome').format()
+    BE->>DB: Promise.all([<br/>  getAvailabilitiesOrThrow(doctor.userId, date),<br/>  findConfirmedReservations(doctor.userId, date),<br/>  findVisitTypeOrThrow(visitType)<br/>])
+    DB-->>BE: availabilities[], confirmedReservations[], visitTypeEntity
+    Note over BE: generateSlotsWithinAvailability(start, end, durationMinutes)<br/>Filtra slot già occupati (isSlotOccupied)<br/>Converte in Europe/Rome con moment-timezone
+    BE-->>FORM: HTTP 200 [{ startTime, endTime }, ...]
+    Note over FORM: Mostra griglia slot selezionabili (SimpleGrid 3 colonne)<br/>Formato: «HH:mm - HH:mm» (toLocaleTimeString it-IT)
+
+    %% ─── SELEZIONE SLOT + INVIO FORM ─────────────────────────────────────────
+    Medico->>FORM: Seleziona uno slot e clicca «Crea prenotazione»
+    Note over FORM: handleSubmit():<br/>slots.find(s => s.startTime === selectedSlot)<br/>createReservation.mutateAsync({ patientId, startTime, endTime, visitType })
+    FORM->>BE: POST /reservations/for-patient<br/>{ patientId, startTime, endTime, visitType }
+    Note over BE: @Roles(DOCTOR, ADMIN)<br/>ValidationPipe: @IsUUID patientId, @IsISO8601 startTime/endTime, @IsEnum visitType<br/>Guard: user.doctor obbligatorio → altrimenti HTTP 401
+
+    alt Medico senza entità doctor
+        BE-->>FORM: HTTP 401 UnauthorizedException<br/>«You are not a doctor»
+    else Medico valido
+        BE->>DB: patientRepository.findOne({<br/>  where: { id: dto.patientId, doctor: { userId: doctor.userId } },<br/>  relations: ['doctor']<br/>})
+        DB-->>BE: Patient | null
+
+        alt Paziente non trovato / non del medico
+            BE-->>FORM: HTTP 404 NotFoundException<br/>«Patient not found or does not belong to this doctor»
+        else Paziente valido → createReservationCore()
+            BE->>DB: visitTypeRepository.findOne({ where: { name: visitType } })
+            DB-->>BE: VisitType entity (con durationMinutes)
+
+            alt visitType = FIRST_VISIT → checkExistOtherVisits()
+                BE->>DB: reservationRepository.findOne({ doctor, patient })
+                DB-->>BE: Reservation | null
+                alt Prenotazione esistente (non può essere prima visita)
+                    BE-->>FORM: HTTP 400 BadRequestException<br/>«This reservation can't be a first visit»
+                end
+            end
+
+            BE->>BE: checkVisitDuration(durationMinutes, start, end)<br/>(end - start) / 60000 deve corrispondere a visitType.durationMinutes
+
+            alt Durata slot non corrisponde al tipo visita
+                BE-->>FORM: HTTP 400 BadRequestException<br/>«The duration of slot doesn't match the type of visit»
+            else Durata corretta
+                BE->>DB: reservationRepository.findOne({<br/>  doctor, startDate: start, status: CONFIRMED<br/>})
+                DB-->>BE: Reservation | null (slot già prenotato?)
+
+                alt Slot già prenotato (CONFIRMED)
+                    BE-->>FORM: HTTP 409 ConflictException<br/>«This slot has been booked»
+                else Slot libero → findValidAvailabilityOrThrow()
+                    BE->>DB: availabilityRepository WHERE<br/>doctorUserId = :id<br/>AND startTime &lt;= :startTime<br/>AND endTime &gt;= :endTime
+                    DB-->>BE: Availability | null
+
+                    alt Nessuna availability valida
+                        BE-->>FORM: HTTP 400 BadRequestException<br/>«The reservation must be within an available time slot for the doctor.»
+                    else Availability valida
+                        BE->>DB: reservationRepository.create({<br/>  startDate, endDate, doctor, patient,<br/>  status: CONFIRMED, createdAt: new Date(), visitType<br/>})
+                        BE->>DB: reservationRepository.save(reservation)
+                        DB-->>BE: Reservation salvata
+                        BE-->>FORM: HTTP 201 Created — Reservation entity
+                        Note over FORM: onSuccess():<br/>queryClient.invalidateQueries(['reservations'])<br/>queryClient.invalidateQueries(['reservations/patient'])<br/>queryClient.invalidateQueries(['slots'])<br/>notifications.show «Prenotazione creata con successo»<br/>handleClose() → Modal chiuso
+                        Note over CAL: Calendario si aggiorna automaticamente<br/>(React Query refetch)
+                    end
+                end
+            end
+        end
+    end
+    </div>
+  </div>
+
+</body>
+</html>

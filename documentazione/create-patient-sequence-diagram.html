@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sequence Diagram — Creazione Paziente</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #ffffff;
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      padding: 40px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 32px;
+      letter-spacing: -0.3px;
+    }
+    #diagram {
+      display: flex;
+      justify-content: center;
+    }
+    .mermaid {
+      font-size: 13px;
+    }
+  </style>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      sequence: {
+        actorMargin: 80,
+        width: 160,
+        height: 50,
+        boxMargin: 10,
+        boxTextMargin: 6,
+        noteMargin: 10,
+        messageMargin: 40,
+        mirrorActors: true,
+        useMaxWidth: false,
+        diagramMarginX: 50,
+        diagramMarginY: 20
+      },
+      themeVariables: {
+        primaryColor: '#1e3a5f',
+        primaryTextColor: '#ffffff',
+        primaryBorderColor: '#0f2540',
+        lineColor: '#334e68',
+        secondaryColor: '#e8f0fe',
+        tertiaryColor: '#fff8e1',
+        activationBorderColor: '#1e3a5f',
+        activationBkgColor: '#dce8f8',
+        altSectionBkgColor: '#fef9e7',
+        altBackground: '#fce4ec',
+        noteBkgColor: '#fff9c4',
+        noteBorderColor: '#f9a825',
+        noteTextColor: '#1a1a1a',
+        loopTextColor: '#1a1a1a',
+        labelBoxBkgColor: '#e3f2fd',
+        labelBoxBorderColor: '#1565c0',
+        labelTextColor: '#0d47a1',
+        sequenceNumberColor: '#ffffff',
+        fontFamily: 'Segoe UI, Helvetica Neue, Arial, sans-serif',
+        fontSize: '13px'
+      }
+    });
+  </script>
+</head>
+<body>
+  <h1>Sequence Diagram — Creazione di un Paziente da parte del Medico</h1>
+  <div id="diagram">
+    <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Medico
+    participant FE as Frontend
+    participant DC as DoctorController
+    participant DS as DoctorService
+    participant DB as Database
+    participant NM as NodeMailer
+
+    Medico->>FE: Compila form e clicca aggiungi (email, cf, phone, dati clinici)
+    FE->>DC: POST /doctor/invite (CreateInviteDto)
+    DC->>DS: createInvite(user.id, inviteDto)
+    
+    Note over DS: getDoctorOrThrow(userId)
+    DS->>DB: doctorRepository.findOne({ dove user.id: userId })
+    DB-->>DS: Doctor
+    
+    Note over DS: findUser(email, phone, cf)
+    DS->>DB: userRepository.createQueryBuilder(...)
+    DB-->>DS: User | null
+    
+    alt Paziente/User già esiste
+        DS-->>DC: throw BadRequestException("Tale paziente già esiste")
+        DC-->>FE: HTTP 400 Bad Request
+        FE-->>Medico: Mostra errore
+    else Paziente non esiste
+        Note over DS: createPatient(createInviteDto, doctor)
+        DS->>DB: patientRepository.create(...) + save(patient)
+        DB-->>DS: Patient salvato (senza utente per ora)
+        
+        DS->>DS: generateRandomPassword()
+        DS->>DS: hashPassword(password) con bcrypt
+        
+        Note over DS: createUserPatient(info, hashedPassword)
+        DS->>DS: findUser(email, phone, cf)
+        DS->>DB: userRepository.createQueryBuilder(...)
+        DB-->>DS: User | null
+        
+        alt User esiste in questo controllo intermedio
+            DS-->>DC: throw ConflictException("User already exist")
+            DC-->>FE: HTTP 409 Conflict
+            FE-->>Medico: Errore conflitto
+            
+        else Nessun conflitto, procede alla creazione utente
+            DS->>DB: userRepository.create(dati anagrafici, role: PATIENT, mustChangePassword: true)
+            DS->>DB: userRepository.save(user)
+            DB-->>DS: User salvato
+            
+            Note over DS: assignPatientToUser(doctor.userId, patient.id, newUser)
+            DS->>DB: patientRepository.findOne(id: patient.id, doctorId: doctor.userId)
+            DB-->>DS: Patient trovato
+            DS->>DB: patient.user = newUser
+            DS->>DB: patientRepository.save(patient)
+            DB-->>DS: Patient aggiornato (Utente collegato al Paziente)
+            
+            Note over DS: sendPasswordEmail(email, password)
+            DS->>NM: transporter.sendMail(mailOptions)
+            Note over NM: Invia credenziali via Email (testo & HTML) al paziente
+            NM-->>DS: Conferma invio (console.log)
+            
+            DS-->>DC: { patientId: patient.id }
+            DC-->>FE: HTTP 201 Created { patientId }
+            FE-->>Medico: Redirect o notifica di successo
+        end
+    end
+    </div>
+  </div>
+</body>
+</html>

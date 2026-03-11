@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sequence Diagram — Flusso 2FA</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #ffffff;
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      padding: 40px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 32px;
+      letter-spacing: -0.3px;
+    }
+    #diagram {
+      display: flex;
+      justify-content: center;
+    }
+    .mermaid {
+      font-size: 13px;
+    }
+  </style>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      sequence: {
+        actorMargin: 80,
+        width: 160,
+        height: 50,
+        boxMargin: 10,
+        boxTextMargin: 6,
+        noteMargin: 10,
+        messageMargin: 40,
+        mirrorActors: true,
+        useMaxWidth: false,
+        diagramMarginX: 50,
+        diagramMarginY: 20
+      },
+      themeVariables: {
+        primaryColor: '#1e3a5f',
+        primaryTextColor: '#ffffff',
+        primaryBorderColor: '#0f2540',
+        lineColor: '#334e68',
+        secondaryColor: '#e8f0fe',
+        tertiaryColor: '#fff8e1',
+        activationBorderColor: '#1e3a5f',
+        activationBkgColor: '#dce8f8',
+        altSectionBkgColor: '#fef9e7',
+        altBackground: '#fce4ec',
+        noteBkgColor: '#fff9c4',
+        noteBorderColor: '#f9a825',
+        noteTextColor: '#1a1a1a',
+        loopTextColor: '#1a1a1a',
+        labelBoxBkgColor: '#e3f2fd',
+        labelBoxBorderColor: '#1565c0',
+        labelTextColor: '#0d47a1',
+        sequenceNumberColor: '#ffffff',
+        fontFamily: 'Segoe UI, Helvetica Neue, Arial, sans-serif',
+        fontSize: '13px'
+      }
+    });
+  </script>
+</head>
+<body>
+  <h1>Sequence Diagram — Flusso Autenticazione a Due Fattori (2FA)</h1>
+  <div id="diagram">
+    <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Utente
+    participant FE as Frontend
+    participant AC as AuthController
+    participant AS as AuthService
+    participant TFS as TwoFactorService
+    participant DB as Database
+
+    Utente->>FE: Inserisce email e password
+    FE->>AC: POST /auth/signin (email, password)
+    AC->>AS: signIn(credentials, deviceInfo)
+    AS->>DB: userRepository.findOne({ where: { email } })
+    DB-->>AS: User | null
+
+    alt Credenziali non valide (user non trovato o bcrypt.compare → false)
+        AS-->>AC: throw UnauthorizedException("Invalid credentials")
+        AC-->>FE: HTTP 401 Unauthorized
+        FE-->>Utente: Mostra errore "Credenziali non valide"
+
+    else 2FA NON abilitata (user.twoFactorEnabled === false)
+        Note over AS: completeLogin(user, deviceInfo)
+        AS->>DB: doctorRepository.findOne({ userId }) oppure patientRepository.findOne({ user })
+        DB-->>AS: Doctor | Patient
+        AS->>DB: sessionRepository.create() + save()
+        AS->>AS: generateTokens(userId, sessionId) — accessToken 15m + refreshToken 7d
+        AS->>AS: hashToken(refreshToken)
+        AS->>DB: sessionRepository.save(session con refreshToken hashato)
+        AS-->>AC: { accessToken, refreshToken, user }
+        AC->>FE: Set-Cookie: jwt (httpOnly) + Set-Cookie: refreshToken (httpOnly)
+        AC-->>FE: HTTP 201 { user, requires2fa: false }
+        FE-->>Utente: Login completato
+
+    else 2FA ABILITATA (user.twoFactorEnabled === true)
+        AS->>AS: uuid() genera challengeId
+        AS->>DB: challengeRepository.create({ challengeId, userId, type: LOGIN_2FA, expiresAt: now+5min, attempts: 0, maxAttempts: 5 }) + save()
+        DB-->>AS: AuthChallenge salvato
+        AS-->>AC: { requires2fa: true, challengeId }
+        AC-->>FE: HTTP 201 { requires2fa: true, challengeId }
+        FE-->>Utente: Redirect a /2fa/challengeId=...
+    end
+
+    Utente->>FE: Inserisce codice OTP (TOTP 6 cifre)
+    FE->>AC: POST /auth/2fa/verify (challengeId, code)
+
+    alt challengeId o code mancante — controller guard
+        AC-->>FE: throw UnauthorizedException("Missing challengeId or code")
+        FE-->>Utente: HTTP 401 Unauthorized
+
+    else Parametri presenti
+        AC->>AS: verify2fa(challengeId, code, deviceInfo)
+        AS->>DB: challengeRepository.findOne({ where: { challengeId } })
+        DB-->>AS: AuthChallenge | null
+
+        alt Challenge non trovato
+            AS-->>AC: throw UnauthorizedException("Invalid challenge or code")
+            AC-->>FE: HTTP 401 Unauthorized
+            FE-->>Utente: Errore — challenge non valido
+
+        else Challenge trovato
+            AS->>AS: Verifica type === "LOGIN_2FA" e challenge.expiresAt >= new Date()
+
+            alt Challenge scaduto o tipo errato
+                AS->>DB: challengeRepository.remove(challenge)
+                AS-->>AC: throw UnauthorizedException("Challenge expired or invalid")
+                AC-->>FE: HTTP 401 Unauthorized
+                FE-->>Utente: Errore — sessione OTP scaduta
+
+            else Challenge valido (non scaduto, tipo corretto)
+                AS->>AS: Verifica attempts < maxAttempts (5)
+
+                alt Troppi tentativi (attempts >= maxAttempts)
+                    AS->>DB: challengeRepository.remove(challenge)
+                    AS-->>AC: throw UnauthorizedException("Too many attempts")
+                    AC-->>FE: HTTP 401 Unauthorized
+                    FE-->>Utente: Errore — troppi tentativi, rifare login
+
+                else Tentativi ancora disponibili
+                    AS->>DB: userRepository.findOne({ where: { id: challenge.userId } })
+                    DB-->>AS: User (con twoFactorSecret)
+
+                    alt User non trovato o twoFactorSecret mancante
+                        AS->>DB: challengeRepository.remove(challenge)
+                        AS-->>AC: throw UnauthorizedException("User 2FA not properly configured")
+                        AC-->>FE: HTTP 401 Unauthorized
+                        FE-->>Utente: Errore — configurazione 2FA non valida
+
+                    else User trovato con secret valido
+                        AS->>TFS: isTwoFactorCodeValid(code, user.twoFactorSecret)
+                        TFS->>TFS: authenticator.verify({ token, secret }) — window ±1 step = ±30s tolleranza
+                        TFS-->>AS: true | false
+
+                        alt Codice OTP NON valido
+                            AS->>AS: challenge.attempts += 1
+                            AS->>DB: challengeRepository.save(challenge)
+                            AS-->>AC: throw UnauthorizedException("Invalid code")
+                            AC-->>FE: HTTP 401 Unauthorized
+                            FE-->>Utente: Errore — codice OTP errato
+
+                        else Codice OTP VALIDO
+                            AS->>DB: challengeRepository.remove(challenge)
+                            Note over AS: completeLogin(user, deviceInfo)
+                            AS->>DB: doctorRepository.findOne({ userId }) oppure patientRepository.findOne({ user })
+                            DB-->>AS: Doctor | Patient
+                            AS->>DB: sessionRepository.create() + save()
+                            AS->>AS: generateTokens(userId, sessionId) — accessToken 15m + refreshToken 7d
+                            AS->>AS: hashToken(refreshToken)
+                            AS->>DB: sessionRepository.save(session con refreshToken hashato)
+                            AS-->>AC: { accessToken, refreshToken, user }
+                            AC->>FE: Set-Cookie: jwt (httpOnly) + Set-Cookie: refreshToken (httpOnly)
+                            AC-->>FE: HTTP 201 — user (UserItem)
+                            FE-->>Utente: Login 2FA completato
+                        end
+                    end
+                end
+            end
+        end
+    end
+    </div>
+  </div>
+</body>
+</html>
